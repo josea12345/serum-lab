@@ -24,7 +24,7 @@ const OFFLINE_DIRECTIONS = [
 ];
 function localFallback(prompt: string, category: Category, variation: number) {
   const direction = variation > 0 ? OFFLINE_DIRECTIONS[(variation - 1) % OFFLINE_DIRECTIONS.length] : "";
-  const patch = generatePatch({ prompt: [prompt, direction].filter(Boolean).join(". "), category });
+  const patch = generatePatch({ prompt: [prompt, direction].filter(Boolean).join(". "), category, variation });
   patch.prompt = prompt;
   patch.description = (patch.description + " Local sound-intent fallback: generated without Gemini; advanced AI interpretation is temporarily unavailable.").slice(0, 1000);
   return Response.json({ patch, model: "local sound-intent engine (offline fallback)", fallback: true });
@@ -42,8 +42,8 @@ export const Route = createFileRoute("/api/generate")({
         const base = categoryBase(category);
         if (!key) return localFallback(prompt, category, variation);
         const previous = body.previous ? JSON.stringify(body.previous).slice(0, 5000) : "None";
-        const system = "You are Serum Lab, a senior Serum 2 synthesist. Apply the following technical design curriculum as operating knowledge, not as optional inspiration. Return ONLY one complete JSON patch object matching the supplied schema. Use only schema fields and enum values. Envelope times are milliseconds; filter cutoff Hz; LFO rate Hz. Keep settings playable, mix-aware, and internally coherent. Never claim unsupported native preset functionality.\\n\\n" + SERUM_2_DESIGN_BIBLE;
-        const direction = variation === 0 ? "Create the strongest first interpretation." : "Creative iteration " + (variation + 1) + ": create a genuinely different sound-design direction, not a small random tweak. Change the synthesis architecture, source character, envelope strategy, modulation and/or effects while preserving the brief. Previous patch to avoid repeating: " + previous;
+        const system = "You are a world-class electronic music sound designer and senior Serum 2 programmer. Your output must sound like a finished, intentional instrument from a professional record, not a generic preset demo. Design the patch in this order: source architecture and spectral identity; transient/body balance; note articulation; harmonic movement; stereo placement; then effects. Every oscillator must have a distinct audible role. Avoid defaulting to saw stacks, excessive unison, excessive reverb, chorus-plus-dimension stacking, or turning on every effect. Keep low frequencies mono and stable, preserve transient definition, leave headroom, and use the minimum processing needed. Choose envelope and modulation values that fit the musical role and note range. Be specific, tasteful, and decisive. Variation requests must change the underlying sound concept and layer roles, not merely tweak parameter values. Use only schema fields and enum values; do not invent factory wavetable names or unsupported engines. Return ONLY one complete JSON patch object matching the supplied schema. Envelope times are milliseconds; filter cutoff Hz; LFO rate Hz.\\n\\n" + SERUM_2_DESIGN_BIBLE;
+        const direction = variation === 0 ? "Create the strongest, most musically useful interpretation. Do not over-layer or over-process." : "Creative iteration " + (variation + 1) + ": create a clearly different professional instrument concept. Choose a new source-role arrangement and a different transient/body relationship. Preserve the brief but do not reuse the previous architecture. Previous patch to avoid repeating: " + previous;
         const user = "Brief: " + prompt + "\nCategory: " + category + "\nDirection: " + direction + "\n\nComplete output structure and valid enum examples: " + JSON.stringify(base) + "\n\nReturn a complete patch object. Give it a distinctive uppercase preset name, meaningful description and tags. Keep prompt equal to the brief.";
         let response: Response | undefined;
         let timedOut = false;
