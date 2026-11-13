@@ -3,6 +3,7 @@ import { CELESTIAL_KEYS } from "./presets";
 import { applyVariation } from "./variations";
 import { generatePatch } from "./generator";
 import { EXPORTERS, buildSpec } from "./export";
+import { upgradePatch } from "./storage";
 
 describe("Serum Lab engine", () => {
   it("starter preset is CELESTIAL KEYS in Keys", () => {
@@ -23,6 +24,13 @@ describe("Serum Lab engine", () => {
     const b = generatePatch({ prompt: "dark gritty bass", category: "Keys" }, "t", "x");
     expect(a.category).toBe("Bass");
     expect(a).toEqual(b);
+  });
+  it("legacy saved patches gain oscillator C without losing their settings", () => {
+    const legacy = { ...CELESTIAL_KEYS } as Partial<typeof CELESTIAL_KEYS>;
+    delete legacy.oscC;
+    const upgraded = upgradePatch(legacy as typeof CELESTIAL_KEYS);
+    expect(upgraded.oscC.enabled).toBe(false);
+    expect(upgraded.oscA.wavetable).toBe(CELESTIAL_KEYS.oscA.wavetable);
   });
   it("native export is available as beta and JSON is labeled non-native", () => {
     expect(EXPORTERS.find((e) => e.id === "serum2-native")?.available).toBe(true);
