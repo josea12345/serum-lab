@@ -29,6 +29,31 @@ function localFallback(prompt: string, category: Category, variation: number) {
   patch.description = (patch.description + " Local sound-intent fallback: generated without Gemini; advanced AI interpretation is temporarily unavailable.").slice(0, 1000);
   return Response.json({ patch, model: "local sound-intent engine (offline fallback)", fallback: true });
 }
+
+async function geminiRequest(url: string, init: RequestInit, timeoutMs: number): Promise<{ status: number; ok: boolean; text: string }> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const request = (async () => {
+    const response = await fetch(url, { ...init, signal: controller.signal });
+    return { status: response.status, ok: response.ok, text: await response.text() };
+  })();
+  try {
+    return await Promise.race([
+      request,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          controller.abort();
+          const error = new Error("Gemini request timed out");
+          error.name = "TimeoutError";
+          reject(error);
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
 export const Route = createFileRoute("/api/generate")({
   server: { handlers: {
     POST: async ({ request }) => {
@@ -45,36 +70,56 @@ export const Route = createFileRoute("/api/generate")({
         const system = "You are a world-class electronic music sound designer and senior Serum 2 programmer. Your output must sound like a finished, intentional instrument from a professional record, not a generic preset demo. Design the patch in this order: source architecture and spectral identity; transient/body balance; note articulation; harmonic movement; stereo placement; then effects. Every oscillator must have a distinct audible role. Avoid defaulting to saw stacks, excessive unison, excessive reverb, chorus-plus-dimension stacking, or turning on every effect. Keep low frequencies mono and stable, preserve transient definition, leave headroom, and use the minimum processing needed. Choose envelope and modulation values that fit the musical role and note range. Be specific, tasteful, and decisive. Variation requests must change the underlying sound concept and layer roles, not merely tweak parameter values. Use only schema fields and enum values; do not invent factory wavetable names or unsupported engines. Return ONLY one complete JSON patch object matching the supplied schema. Envelope times are milliseconds; filter cutoff Hz; LFO rate Hz.\\n\\n" + SERUM_2_DESIGN_BIBLE;
         const direction = variation === 0 ? "Create the strongest, most musically useful interpretation. Do not over-layer or over-process." : "Creative iteration " + (variation + 1) + ": create a clearly different professional instrument concept. Choose a new source-role arrangement and a different transient/body relationship. Preserve the brief but do not reuse the previous architecture. Previous patch to avoid repeating: " + previous;
         const user = "Brief: " + prompt + "\nCategory: " + category + "\nDirection: " + direction + "\n\nComplete output structure and valid enum examples: " + JSON.stringify(base) + "\n\nAllowed actual Serum 2 factory wavetables: " + WAVETABLES.join(", ") + ". Allowed self-contained warp modes: " + WARP_MODES.join(", ") + ". Select source tables intentionally and use warp only when it contributes audible harmonic motion. Cross-oscillator FM/AM modes are intentionally excluded until operator routing is modeled. The second warp lane is independent and can be used to tame or further shape the primary warp.\n\nReturn a complete patch object. Give it a distinctive uppercase preset name, meaningful description and tags. Keep prompt equal to the brief.";
-        let response: Response | undefined;
-        let timedOut = false;
-        // Gemini 3.8 Flash can be temporarily overloaded. Retry one time on
-        // a timeout or 503, while keeping the total request inside the UI deadline.
-        for (let attempt = 0; attempt < 2; attempt++) {
-          try {
-            response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent", {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-              signal: AbortSignal.timeout(18000),
-              body: JSON.stringify({
-                systemInstruction: { parts: [{ text: system }] },
-                contents: [{ role: "user", parts: [{ text: user }] }],
-                generationConfig: { temperature: variation ? 0.95 : 0.75, maxOutputTokens: 3500, responseMimeType: "application/json", thinkingConfig: { thinkingLevel: "MEDIUM" } }
-              })
-            });
-            if (response.status !== 503 || attempt === 1) break;
-            await response.body?.cancel();
-          } catch (error) {
-            if (!(error instanceof Error) || (error.name !== "TimeoutError" && error.name !== "AbortError")) throw error;
-            timedOut = true;
-            if (attempt === 1) break;
+        let response: { status: number; ok: boolean; text: string } | undefined;
+        let modelUsed = "";
+        const models = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
+        // Hard deadline includes receiving the response body. Try the alternate
+        // free-tier model if the primary model is overloaded or times out.
+        for (const model of models) {
+          for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+              response = await geminiRequest(
+                "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent",
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+                  body: JSON.stringify({
+                    systemInstruction: { parts: [{ text: system }] },
+                    contents: [{ role: "user", parts: [{ text: user }] }],
+                    generationConfig: { temperature: variation ? 0.95 : 0.75, maxOutputTokens: 3500, responseMimeType: "application/json", thinkingConfig: { thinkingLevel: "MEDIUM" } }
+                  })
+                },
+                9000
+              );
+              modelUsed = model;
+              if (response.ok) break;
+              if ((response.status === 503 || response.status === 429) && attempt === 0) {
+                response = undefined;
+                await new Promise((resolve) => setTimeout(resolve, 500));
+                continue;
+              }
+              if (response.status === 503 || response.status === 429) {
+                response = undefined;
+                break;
+              }
+              break;
+            } catch (error) {
+              response = undefined;
+              if (error instanceof Error && error.name === "TimeoutError") break;
+              throw error;
+            }
           }
-          await new Promise((resolve) => setTimeout(resolve, 700));
+          if (response?.ok) break;
+          if (response && response.status !== 429 && response.status !== 503) break;
         }
-        if (!response || timedOut && response.status === 503) {
+        if (!response) {
+          return localFallback(prompt, category, variation);
+        }
+
           return localFallback(prompt, category, variation);
         }
         if (!response.ok) {
-          const detail = (await response.text()).slice(0, 500);
+          const detail = response.text.slice(0, 500);
           const status = response.status === 429 ? 429 : response.status === 403 || response.status === 503 ? 503 : 502;
           const message = response.status === 429
             ? "Gemini's free usage limit has been reached for now. Please try again after the quota resets."
@@ -86,7 +131,7 @@ export const Route = createFileRoute("/api/generate")({
           }
           return Response.json({ error: message }, { status });
         }
-        const data = await response.json() as any;
+        const data = JSON.parse(response.text) as any;
         const raw = data.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text ?? "").join("");
         if (typeof raw !== "string" || !raw.trim()) throw new Error("Gemini returned an empty patch. Try generating again.");
         const parsed = JSON.parse(raw) as Partial<Patch>;
@@ -180,7 +225,7 @@ export const Route = createFileRoute("/api/generate")({
         patch.global.voices = Math.round(clamp(patch.global.voices, 1, 32, 8));
         patch.global.portamento = clamp(patch.global.portamento, 0, 2000, 0);
         patch.global.master = clamp(patch.global.master, 0, 100, 75);
-        return Response.json({ patch, model: "gemini-3.8-flash (free tier)" });
+        return Response.json({ patch, model: modelUsed + " (free tier)" });
       } catch (error) {
         return Response.json({ error: error instanceof Error ? error.message : "Patch generation failed." }, { status: 500 });
       }
