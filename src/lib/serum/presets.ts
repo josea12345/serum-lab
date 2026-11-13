@@ -28,6 +28,12 @@ export const CELESTIAL_KEYS: Patch = {
     compressor: { enabled: true, threshold: -18, ratio: 2.5, mix: 70 },
     dimension: { enabled: true, size: 55, mix: 40 },
   },
+  macros: [
+    { name: "TONE", value: 70, target: "Filter Cutoff", amount: 28 },
+    { name: "MOTION", value: 0, target: "Osc A WT Pos", amount: 22 },
+    { name: "SPACE", value: 20, target: "Reverb Mix", amount: 18 },
+    { name: "EDGE", value: 0, target: "Osc B Level", amount: 12 },
+  ],
   global: { voices: 8, portamento: 0, master: 75 },
   createdAt: "2026-01-01T00:00:00.000Z",
   updatedAt: "2026-01-01T00:00:00.000Z",
