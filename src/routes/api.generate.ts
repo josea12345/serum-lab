@@ -115,9 +115,6 @@ export const Route = createFileRoute("/api/generate")({
         if (!response) {
           return localFallback(prompt, category, variation);
         }
-
-          return localFallback(prompt, category, variation);
-        }
         if (!response.ok) {
           const detail = response.text.slice(0, 500);
           const status = response.status === 429 ? 429 : response.status === 403 || response.status === 503 ? 503 : 502;
