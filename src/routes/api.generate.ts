@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { categoryBase } from "@/lib/serum/presets";
+import { generatePatch } from "@/lib/serum/generator";
 import { SERUM_2_DESIGN_BIBLE } from "@/lib/serum/knowledge";
 import { CATEGORIES, DIST_MODES, FILTER_TYPES, LFO_SHAPES, MOD_TARGETS, WAVETABLES, type Category, type Patch } from "@/lib/serum/types";
 function merge(base: any, incoming: any): any {
@@ -12,11 +13,26 @@ function merge(base: any, incoming: any): any {
 }
 const clamp = (v: unknown, lo: number, hi: number, fallback: number) =>
   typeof v === "number" && Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : fallback;
+
+const OFFLINE_DIRECTIONS = [
+  "FM bell transient layered over a warm sustained body",
+  "subtractive filtered oscillator with a rhythmic pluck envelope",
+  "wide upper harmonics over a centered dry core",
+  "mono analog-style voice with controlled saturation and glide",
+  "soft evolving pad with restrained slow modulation",
+  "bright transient over a dark rounded tonal foundation",
+];
+function localFallback(prompt: string, category: Category, variation: number) {
+  const direction = variation > 0 ? OFFLINE_DIRECTIONS[(variation - 1) % OFFLINE_DIRECTIONS.length] : "";
+  const patch = generatePatch({ prompt: [prompt, direction].filter(Boolean).join(". "), category });
+  patch.prompt = prompt;
+  patch.description = (patch.description + " Local sound-intent fallback: generated without Gemini; advanced AI interpretation is temporarily unavailable.").slice(0, 1000);
+  return Response.json({ patch, model: "local sound-intent engine (offline fallback)", fallback: true });
+}
 export const Route = createFileRoute("/api/generate")({
   server: { handlers: {
     POST: async ({ request }) => {
       const key = process.env.GEMINI_API_KEY;
-      if (!key) return Response.json({ error: "Free AI is not connected yet. Add GEMINI_API_KEY to the Serum Lab Vercel project." }, { status: 503 });
       try {
         const body = await request.json() as { prompt?: string; category?: Category; variation?: number; previous?: Partial<Patch> };
         const prompt = typeof body.prompt === "string" ? body.prompt.trim().slice(0, 1200) : "";
@@ -24,6 +40,7 @@ export const Route = createFileRoute("/api/generate")({
         const variation = Math.max(0, Math.min(20, Number(body.variation) || 0));
         if (!prompt) return Response.json({ error: "Describe the sound first." }, { status: 400 });
         const base = categoryBase(category);
+        if (!key) return localFallback(prompt, category, variation);
         const previous = body.previous ? JSON.stringify(body.previous).slice(0, 5000) : "None";
         const system = "You are Serum Lab, a senior Serum 2 synthesist. Apply the following technical design curriculum as operating knowledge, not as optional inspiration. Return ONLY one complete JSON patch object matching the supplied schema. Use only schema fields and enum values. Envelope times are milliseconds; filter cutoff Hz; LFO rate Hz. Keep settings playable, mix-aware, and internally coherent. Never claim unsupported native preset functionality.\\n\\n" + SERUM_2_DESIGN_BIBLE;
         const direction = variation === 0 ? "Create the strongest first interpretation." : "Creative iteration " + (variation + 1) + ": create a genuinely different sound-design direction, not a small random tweak. Change the synthesis architecture, source character, envelope strategy, modulation and/or effects while preserving the brief. Previous patch to avoid repeating: " + previous;
@@ -54,7 +71,7 @@ export const Route = createFileRoute("/api/generate")({
           await new Promise((resolve) => setTimeout(resolve, 700));
         }
         if (!response || timedOut && response.status === 503) {
-          return Response.json({ error: "Gemini is temporarily overloaded and did not respond in time. Please try Generate again in a moment." }, { status: 504 });
+          return localFallback(prompt, category, variation);
         }
         if (!response.ok) {
           const detail = (await response.text()).slice(0, 500);
@@ -64,6 +81,9 @@ export const Route = createFileRoute("/api/generate")({
             : response.status === 503
               ? "Gemini is temporarily overloaded. Please try Generate again in a moment."
               : "Gemini API returned " + response.status + ": " + detail;
+          if (response.status === 429 || response.status === 403 || response.status === 503) {
+            return localFallback(prompt, category, variation);
+          }
           return Response.json({ error: message }, { status });
         }
         const data = await response.json() as any;
