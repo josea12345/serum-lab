@@ -5,6 +5,7 @@ import { generatePatch } from "./generator";
 import { EXPORTERS, buildSpec } from "./export";
 import { upgradePatch } from "./storage";
 import { SERUM_FACTORY_WAVETABLES, WAVETABLES, WARP_MODES } from "./types";
+import { applySoundArchitecture, evaluateAndRepairPatch, planSoundArchitecture } from "./intelligence";
 
 describe("Serum Lab engine", () => {
   it("starter preset is CELESTIAL KEYS in Keys", () => {
@@ -59,6 +60,37 @@ describe("Serum Lab engine", () => {
     expect(CELESTIAL_KEYS.macros).toHaveLength(4);
     expect(CELESTIAL_KEYS.macros.map((m) => m.name)).toEqual(["TONE", "MOTION", "SPACE", "EDGE"]);
     expect(CELESTIAL_KEYS.macros.every((m) => m.value >= 0 && m.value <= 100)).toBe(true);
+  });
+  it("plans distinct sound architectures for emotional piano and Rhodes briefs", () => {
+    expect(planSoundArchitecture("Fred again inspired emotional piano keys", "Keys", 0).id).toBe("emotive-keys");
+    expect(planSoundArchitecture("warm Rhodes electric piano", "Keys", 0).id).toBe("rhodes-keys");
+    expect(planSoundArchitecture("warm Rhodes electric piano", "Keys", 1).id).not.toBe("rhodes-keys");
+  });
+  it("offline keys generation assigns separate body and tine layers", () => {
+    const patch = generatePatch({ prompt: "Fred again inspired emotional piano keys", category: "Keys" }, "t", "architecture-test");
+    expect(patch.oscA.wavetable).toBe("Warm Analog / DM-OSCAR");
+    expect(patch.oscB.wavetable).toBe("FM Piano");
+    expect(patch.oscB.octave).toBe(1);
+    expect(patch.ampEnv.attack).toBeLessThanOrEqual(3);
+  });
+  it("quality control repairs bass width, sub and wet-effect conflicts", () => {
+    const patch = structuredClone(CELESTIAL_KEYS);
+    patch.category = "Bass"; patch.oscA.unison = 8; patch.oscB.pan = 30;
+    patch.fx.reverb.enabled = true; patch.fx.chorus.enabled = true; patch.sub.enabled = false;
+    const report = evaluateAndRepairPatch(patch, "deep mono bass");
+    expect(patch.global.voices).toBe(1);
+    expect(patch.sub.enabled).toBe(true);
+    expect(patch.oscA.unison).toBe(1);
+    expect(patch.oscB.pan).toBe(0);
+    expect(patch.fx.reverb.enabled).toBe(false);
+    expect(patch.fx.chorus.enabled).toBe(false);
+    expect(report.score).toBe(100);
+  });
+  it("offline architecture uses only selectable Serum factory wavetables", () => {
+    const patch = structuredClone(CELESTIAL_KEYS);
+    const plan = applySoundArchitecture(patch, "glass bell pluck", "Pluck", 0);
+    expect(plan.id).toBe("fm-bell");
+    for (const key of ["oscA", "oscB", "oscC"] as const) expect(WAVETABLES).toContain(patch[key].wavetable);
   });
   it("native export is available as beta and JSON is labeled non-native", () => {
     expect(EXPORTERS.find((e) => e.id === "serum2-native")?.available).toBe(true);
