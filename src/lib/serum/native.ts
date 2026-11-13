@@ -20,6 +20,9 @@ function osc(tree:Record<string,Value>,slot:number,o:Patch["oscA"]){
  if(slot<3){
   const mod=tree[name] as Record<string,Value>,wt=mod["WTOsc"+slot] as Record<string,Value>;
   const p=wt.plainParams==="default"?{}:wt.plainParams as Record<string,Value>;
+  const warpEnums:Record<string,string>={"Sync":"kSync","PWM":"kPWM","Bend +":"kBendPos","Bend -":"kBendNeg","Soft Clip":"kDistSoftClip","Hard Clip":"kDistHardClip","Tape Saturation":"kDistTapeSat","Tube":"kDistTube","Wavefold":"kDistLinFold","Quantize":"kQuantize","Self Phase Distortion":"kSelfPD"};
+  if(o.warpMode!=="None"&&o.warpAmount>0){p.kParamWarp=o.warpAmount/100;p.kParamWarpMenu=warpEnums[o.warpMode]||"kSync";}
+  else {delete p.kParamWarp;delete p.kParamWarpMenu;}
   const table=SERUM_FACTORY_WAVETABLES[o.wavetable as keyof typeof SERUM_FACTORY_WAVETABLES]||SERUM_FACTORY_WAVETABLES["Default Shapes"];
   p.kParamTablePos=o.wavetable==="JF Flute"?Math.max(130,256*o.wtPos/100):256*o.wtPos/100;
   wt.plainParams=p;
