@@ -6,7 +6,22 @@ export const WAVETABLES = [
   "Default Shapes", "Analog / Basic Shapes", "Warm Analog / DM-OSCAR", "PWM / Juno",
   "Analog / Basic Mini", "Warm Sub", "Digital / Basic OPL", "Harmonic Series Smooth",
   "Dying Sine", "Acid", "FM Piano", "JF Flute",
+
 ] as const;
+export const SERUM_FACTORY_WAVETABLES: Record<(typeof WAVETABLES)[number], { path: string; frames: number; sampleRate: number; channels: number }> = {
+ "Default Shapes": { path: "S2 Tables/Default Shapes.wav", frames: 18432, sampleRate: 44100, channels: 1 },
+ "Analog / Basic Shapes": { path: "Analog/Basic Shapes.wav", frames: 14336, sampleRate: 44100, channels: 1 },
+ "Warm Analog / DM-OSCAR": { path: "S2 Tables/Analog/DM - OSCAR.wav", frames: 8192, sampleRate: 44100, channels: 1 },
+ "PWM / Juno": { path: "Analog/PWM Juno.wav", frames: 229376, sampleRate: 44100, channels: 1 },
+ "Analog / Basic Mini": { path: "Analog/Basic Mini.wav", frames: 8192, sampleRate: 44100, channels: 1 },
+ "Warm Sub": { path: "S2 Tables/Analog/Warm Sub.wav", frames: 4096, sampleRate: 44100, channels: 1 },
+ "Digital / Basic OPL": { path: "S2 Tables/Digital/Basic OPL.wav", frames: 16384, sampleRate: 44100, channels: 1 },
+ "Harmonic Series Smooth": { path: "S2 Tables/Digital/Harmonic Series Smooth.wav", frames: 49152, sampleRate: 44100, channels: 1 },
+ "Dying Sine": { path: "S2 Tables/Digital/Dying Sine.wav", frames: 524288, sampleRate: 44100, channels: 1 },
+ "Acid": { path: "Analog/Acid.wav", frames: 81920, sampleRate: 44100, channels: 1 },
+ "FM Piano": { path: "S2 Tables/Digital/FM Piano.wav", frames: 4096, sampleRate: 44100, channels: 1 },
+ "JF Flute": { path: "S2 Tables/Digital/JF Flute.wav", frames: 524288, sampleRate: 44100, channels: 1 },
+};
 export const FILTER_TYPES = [
   "MG Low 12", "MG Low 24", "Low 12", "Low 24", "High 12", "Band 12", "Peak 12", "Comb +", "Acid Ladder", "Diode LP", "Formant",
 ] as const;
