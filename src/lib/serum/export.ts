@@ -40,7 +40,7 @@ export const EXPORTERS: Exporter[] = [
     mime: "application/octet-stream",
     available: true,
     verified: false,
-    unavailableReason: "Beta export uses your Serum 2 Init template. It currently maps oscillator, envelope and filter fundamentals; FX, modulation and some advanced controls are not yet mapped.",
+    unavailableReason: "Beta export uses your Serum 2 Init template. It maps oscillator level, tuning, unison and wavetable position, envelopes, and filter cutoff/resonance. Wavetable selection, FX, LFO routing, envelope hold, and global controls are not yet exported.",
   },
 ];
 
