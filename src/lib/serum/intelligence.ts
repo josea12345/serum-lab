@@ -48,18 +48,22 @@ export function planSoundArchitecture(prompt: string, category: Category, variat
     { id: "focused-lead", name: "Focused mono lead", sourcePlan: "A: Analog Basic Shapes core; B: Harmonic Series Smooth upper edge; mono/legato behavior, stable pitch center and restrained glide.", reason: "A clear pitch center cuts through while a quieter upper layer adds definition." },
     { id: "formant-lead", name: "Bright animated lead", sourcePlan: "A: Basic OPL bright core; B: PWM Juno pulse layer with restrained warp; controlled filter movement and short release.", reason: "Movement is assigned to harmonics and filter rather than excessive stereo detune." },
   ];
-  else if (piano || rhodes || category === "Keys") family = [
-    { id: "emotive-keys", name: "Emotive dance keys", sourcePlan: "A: Warm Analog DM-OSCAR as the rounded sustained body; B: FM Piano one octave up at low level for tine/transient detail; C off. Fast onset, natural decaying body, subtle pitch drift, restrained short ambience.", reason: "The attack and body have separate roles; the core stays centered and readable in chords." },
-    { id: "rhodes-keys", name: "Rounded Rhodes-inspired keys", sourcePlan: "A: DM-OSCAR warm body; B: FM Piano tine layer at low level; gentle saturation and restrained chorus, moderate decay, short room.", reason: "A restrained tine layer adds character without turning the patch into a harsh bell." },
-    { id: "glass-keys", name: "Glass upper-register keys", sourcePlan: "A: Analog Basic Shapes clean body; B: FM Piano upper partials; bright transient, moderate decay, controlled high end and minimal stereo spread.", reason: "The spectral contrast comes from the upper partial layer, not extreme unison." },
+  else if (rhodes) family = [
+    { id: "rhodes-keys", name: "Suitcase electric piano", sourcePlan: "A: Serum 2 factory Elec.Piano Suitcase multisample with velocity layers and key zones; no synthetic oscillator stack. Single voice source, centered, subtle tube saturation and restrained chorus.", reason: "Uses the actual sampled electric-piano instrument and its velocity/key zones instead of pretending a wavetable is a piano." },
+    { id: "wide-rhodes-keys", name: "Wide suitcase electric piano", sourcePlan: "A: Factory Elec.Piano Suitcase multisample, single centered source; controlled chorus and short room for stereo width, no detuned oscillator stack.", reason: "Preserves the multisampled electric-piano attack while adding width after the source." },
+    { id: "dry-rhodes-keys", name: "Dry close electric piano", sourcePlan: "A: Factory Elec.Piano Suitcase multisample, single centered source, dry close voicing, minimal processing and fast note release.", reason: "Keeps the sample transient and key-zone detail exposed." },
+  ];
+  else if (piano || category === "Keys") family = [
+    { id: "emotive-keys", name: "Emotive sampled grand piano", sourcePlan: "A: Serum 2 factory Baby Grand Piano multisample with real key zones and velocity layers; no fake FM-piano wavetable. Single centered source, natural sample decay, light glue and intimate ambience.", reason: "Uses the actual sampled grand-piano instrument and its velocity/key zones; the piano character comes from the source, not parameter decoration." },
+    { id: "felt-grand-keys", name: "Soft intimate grand piano", sourcePlan: "A: Factory Baby Grand Piano multisample, darker close voicing, gentle high-frequency rolloff, restrained room, no oscillator stack.", reason: "A real multi-velocity piano sample carries the instrument identity; voicing and space shape the mood." },
+    { id: "processed-grand-keys", name: "Processed emotional grand", sourcePlan: "A: Factory Baby Grand Piano multisample, centered and dry at the source; subtle tube saturation, controlled compression, short tempo-aware ambience and restrained modulation.", reason: "Starts with an authentic piano source, then adds only the production character requested." },
   ];
   else family = [
     { id: "subtractive-core", name: "Subtractive focused core", sourcePlan: "A: Analog Basic Shapes core; B: Harmonic Series Smooth at low level for upper detail; filter and envelope provide the motion.", reason: "A coherent single core with a purposeful harmonic support layer." },
     { id: "digital-hybrid", name: "Digital hybrid voice", sourcePlan: "A: Basic OPL digital source; B: DM-OSCAR warm body; controlled warp and envelope contrast.", reason: "Contrasting digital attack and analog body produce a distinct voice." },
   ];
 
-  const preferenceOffset = rhodes && !piano && family.some((item) => item.id === "rhodes-keys") ? 1 : 0;
-  const chosen = family[((Math.max(0, variation) + preferenceOffset + (evolving && family.length > 2 ? 1 : 0)) % family.length)];
+  const chosen = family[(Math.max(0, variation) + (evolving && family.length > 2 ? 1 : 0)) % family.length];
   return chosen;
 }
 
@@ -72,7 +76,7 @@ export function applySoundArchitecture(p: Patch, prompt: string, category: Categ
   const wet = has(t, ["ambient", "spacious", "cinematic", "washed", "ethereal"]);
   const dirty = has(t, ["gritty", "dirty", "aggressive", "distorted", "growl"]);
   const osc = (key: "oscA" | "oscB" | "oscC", values: Partial<Patch["oscA"]>) => Object.assign(p[key], values);
-  const neutral = { warpMode: "None" as const, warpAmount: 0, warpMode2: "None" as const, warpAmount2: 0, unison: 1, detune: 0, blend: 50, pan: 0, fine: 0, semi: 0 };
+  const neutral = { engine: "wavetable" as const, multisampleInstrument: "piano_grand" as const, multisampleAttack: 0, multisampleDecay: 0, multisampleRelease: 0.2, warpMode: "None" as const, warpAmount: 0, warpMode2: "None" as const, warpAmount2: 0, unison: 1, detune: 0, blend: 50, pan: 0, fine: 0, semi: 0 };
   const setEnvs = (attack: number, decay: number, sustain: number, release: number, modDecay = 300, modAmount = 24) => {
     p.ampEnv = { attack, hold: 0, decay, sustain, release };
     p.env2 = { attack: 0, hold: 0, decay: modDecay, sustain: 0, release: 120, target: "Filter Cutoff", amount: modAmount };
@@ -96,19 +100,31 @@ export function applySoundArchitecture(p: Patch, prompt: string, category: Categ
 
   switch (plan.id) {
     case "emotive-keys":
-      osc("oscA", { wavetable: "Warm Analog / DM-OSCAR", wtPos: 18, level: 78 });
-      osc("oscB", { wavetable: "FM Piano", wtPos: 12, octave: 1, level: 24 });
-      setEnvs(3, 1350, 36, wet ? 950 : 520, 330, 26);
-      p.filter.cutoff = 6800; p.fx.delay.enabled = wet; p.fx.delay.time = 375; p.fx.delay.feedback = 22; p.fx.delay.mix = wet ? 10 : 0;
-      p.fx.chorus.enabled = wide; p.fx.chorus.rate = 0.22; p.fx.chorus.depth = 12; p.fx.chorus.mix = wide ? 9 : 0;
+    case "felt-grand-keys":
+    case "processed-grand-keys":
+      osc("oscA", { engine: "multisample", multisampleInstrument: "piano_grand", multisampleAttack: 0, multisampleDecay: 0, multisampleRelease: 0.18, level: 82, unison: 1, detune: 0 });
+      osc("oscB", { enabled: false, level: 0 }); osc("oscC", { enabled: false, level: 0 });
+      p.sub.enabled = false; p.noise.enabled = false; p.global.voices = 16;
+      setEnvs(0, 0, 100, 650, 330, 4);
+      p.filter.enabled = true; p.filter.type = "MG Low 12"; p.filter.cutoff = plan.id === "felt-grand-keys" ? 5200 : 12500; p.filter.resonance = 0; p.filter.drive = 0;
+      p.fx.distortion.enabled = plan.id === "processed-grand-keys"; p.fx.distortion.mode = "Tube"; p.fx.distortion.drive = 5; p.fx.distortion.mix = plan.id === "processed-grand-keys" ? 7 : 0;
+      p.fx.compressor.enabled = plan.id === "processed-grand-keys"; p.fx.compressor.threshold = -22; p.fx.compressor.ratio = 1.7; p.fx.compressor.mix = 16;
+      p.fx.chorus.enabled = wide && plan.id !== "felt-grand-keys"; p.fx.chorus.rate = 0.18; p.fx.chorus.depth = 8; p.fx.chorus.mix = p.fx.chorus.enabled ? 7 : 0;
+      p.fx.reverb.enabled = true; p.fx.reverb.size = 42; p.fx.reverb.decay = wet ? 2.4 : 1.2; p.fx.reverb.mix = wet ? 14 : 7;
+      p.fx.delay.enabled = wet; p.fx.delay.time = 375; p.fx.delay.feedback = 15; p.fx.delay.mix = wet ? 6 : 0;
       break;
     case "rhodes-keys":
-      osc("oscA", { wavetable: "Warm Analog / DM-OSCAR", wtPos: 12, level: 80 });
-      osc("oscB", { wavetable: "FM Piano", wtPos: 6, octave: 1, level: 20 });
-      setEnvs(2, 1150, 32, 430, 260, 20);
-      p.filter.cutoff = 5900; p.filter.drive = 7;
-      p.fx.distortion.enabled = true; p.fx.distortion.mode = "Tube"; p.fx.distortion.drive = 7; p.fx.distortion.mix = 9;
-      p.fx.chorus.enabled = true; p.fx.chorus.rate = 0.28; p.fx.chorus.depth = 15; p.fx.chorus.mix = 10;
+    case "wide-rhodes-keys":
+    case "dry-rhodes-keys":
+      osc("oscA", { engine: "multisample", multisampleInstrument: "epiano_suitcase", multisampleAttack: 0, multisampleDecay: 0, multisampleRelease: 0.14, level: 82, unison: 1, detune: 0 });
+      osc("oscB", { enabled: false, level: 0 }); osc("oscC", { enabled: false, level: 0 });
+      p.sub.enabled = false; p.noise.enabled = false; p.global.voices = 16;
+      setEnvs(0, 0, 100, 420, 260, 4);
+      p.filter.enabled = true; p.filter.type = "MG Low 12"; p.filter.cutoff = 9800; p.filter.resonance = 0; p.filter.drive = 0;
+      p.fx.distortion.enabled = true; p.fx.distortion.mode = "Tube"; p.fx.distortion.drive = 5; p.fx.distortion.mix = 8;
+      p.fx.chorus.enabled = plan.id === "wide-rhodes-keys" || wide; p.fx.chorus.rate = 0.24; p.fx.chorus.depth = 13; p.fx.chorus.mix = p.fx.chorus.enabled ? 10 : 0;
+      p.fx.reverb.enabled = plan.id !== "dry-rhodes-keys"; p.fx.reverb.size = 38; p.fx.reverb.decay = 1.6; p.fx.reverb.mix = p.fx.reverb.enabled ? 8 : 0;
+      p.fx.delay.enabled = false; p.fx.compressor.enabled = false;
       break;
     case "glass-keys":
       osc("oscA", { wavetable: "Analog / Basic Shapes", level: 76 });
