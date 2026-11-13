@@ -26,6 +26,8 @@ const osc = (k: "oscA" | "oscB" | "oscC"): Field[] => [
   { kind: "range", path: `${k}.wtPos`, label: "WT Pos", min: 0, max: 100, unit: "%" },
   { kind: "select", path: `${k}.warpMode`, label: "Warp", options: WARP_MODES },
   { kind: "range", path: `${k}.warpAmount`, label: "Warp Amount", min: 0, max: 100, unit: "%" },
+  { kind: "select", path: `${k}.warpMode2`, label: "Warp 2", options: WARP_MODES },
+  { kind: "range", path: `${k}.warpAmount2`, label: "Warp 2 Amount", min: 0, max: 100, unit: "%" },
   { kind: "range", path: `${k}.octave`, label: "Octave", min: -4, max: 4 },
   { kind: "range", path: `${k}.semi`, label: "Semi", min: -12, max: 12 },
   { kind: "range", path: `${k}.fine`, label: "Fine", min: -100, max: 100, unit: "ct" },
