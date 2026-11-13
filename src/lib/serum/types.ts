@@ -1,10 +1,11 @@
 export const CATEGORIES = ["Keys", "Bass", "Lead", "Pluck", "Pad", "Texture"] as const;
 export type Category = (typeof CATEGORIES)[number];
 
-/** Descriptive wavetable suggestions — map to the closest table in your Serum 2 library. */
+/** Exact Serum 2 factory wavetable files with verified preset references. */
 export const WAVETABLES = [
-  "Basic Shapes", "Sine Harmonics", "Digital Bell", "Glass Partials", "Warm FM", "Soft Square",
-  "Saw Stack", "Pulse Width", "Vowel Formant", "Spectral Pad", "Granular Air", "Noise Shimmer",
+  "Default Shapes", "Analog / Basic Shapes", "Warm Analog / DM-OSCAR", "PWM / Juno",
+  "Analog / Basic Mini", "Warm Sub", "Digital / Basic OPL", "Harmonic Series Smooth",
+  "Dying Sine", "Acid", "FM Piano", "JF Flute",
 ] as const;
 export const FILTER_TYPES = [
   "MG Low 12", "MG Low 24", "Low 12", "Low 24", "High 12", "Band 12", "Peak 12", "Comb +", "Acid Ladder", "Diode LP", "Formant",
