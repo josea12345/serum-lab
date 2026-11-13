@@ -11,6 +11,7 @@ export const CELESTIAL_KEYS: Patch = {
   prompt: "dreamy futuristic dark melodic keys with a soft bell transient",
   oscA: { enabled: true, wavetable: "Warm FM", wtPos: 32, octave: 0, semi: 0, fine: 0, unison: 3, detune: 12, blend: 40, level: 78, pan: 0 },
   oscB: { enabled: true, wavetable: "Digital Bell", wtPos: 58, octave: 1, semi: 0, fine: 6, unison: 2, detune: 8, blend: 30, level: 42, pan: 0 },
+  oscC: { enabled: false, wavetable: "Spectral Pad", wtPos: 40, octave: 0, semi: 0, fine: 0, unison: 1, detune: 0, blend: 50, level: 25, pan: 0 },
   sub: { enabled: true, octave: -1, level: 22 },
   noise: { enabled: false, level: 6 },
   filter: { enabled: true, type: "MG Low 24", cutoff: 2400, resonance: 18, drive: 12, mix: 100 },
