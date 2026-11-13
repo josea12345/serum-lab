@@ -22,7 +22,7 @@ export const SERUM_FACTORY_WAVETABLES: Record<(typeof WAVETABLES)[number], { pat
  "FM Piano": { path: "S2 Tables/Digital/FM Piano.wav", frames: 4096, sampleRate: 44100, channels: 1 },
  "JF Flute": { path: "S2 Tables/Digital/JF Flute.wav", frames: 524288, sampleRate: 44100, channels: 1 },
 };
-export const WARP_MODES = ["None", "Sync", "PWM", "Bend +", "Wavefold", "Soft Clip", "Hard Clip", "Quantize", "Filter LPF", "Filter HPF", "FM (Osc)", "AM (Osc)"] as const;
+export const WARP_MODES = ["None", "Sync", "PWM", "Bend +", "Wavefold", "Soft Clip", "Hard Clip", "Quantize", "Filter LPF", "Filter HPF"] as const;
 export const FILTER_TYPES = [
   "MG Low 12", "MG Low 24", "Low 12", "Low 24", "High 12", "Band 12", "Peak 12", "Comb +", "Acid Ladder", "Diode LP", "Formant",
 ] as const;
