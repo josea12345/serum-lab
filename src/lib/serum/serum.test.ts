@@ -8,6 +8,8 @@ describe("Serum Lab engine", () => {
   it("starter preset is CELESTIAL KEYS in Keys", () => {
     expect(CELESTIAL_KEYS.name).toBe("CELESTIAL KEYS");
     expect(CELESTIAL_KEYS.category).toBe("Keys");
+    expect(CELESTIAL_KEYS.oscC.enabled).toBe(false);
+    expect(CELESTIAL_KEYS.oscC.level).toBeGreaterThan(0);
   });
   it("Darker lowers cutoff, Brighter raises it", () => {
     expect(applyVariation(CELESTIAL_KEYS, "darker").filter.cutoff).toBeLessThan(2400);
