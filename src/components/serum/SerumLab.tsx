@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { CELESTIAL_KEYS } from "@/lib/serum/presets";
-import { activeGenerator } from "@/lib/serum/generator";
 import { VARIATIONS, applyVariation, type MutatorKey } from "@/lib/serum/variations";
 import { EXPORTERS, downloadBlob, fileName } from "@/lib/serum/export";
 import { buildNativePreset } from "@/lib/serum/native";
