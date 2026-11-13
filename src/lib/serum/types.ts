@@ -22,6 +22,7 @@ export const SERUM_FACTORY_WAVETABLES: Record<(typeof WAVETABLES)[number], { pat
  "FM Piano": { path: "S2 Tables/Digital/FM Piano.wav", frames: 4096, sampleRate: 44100, channels: 1 },
  "JF Flute": { path: "S2 Tables/Digital/JF Flute.wav", frames: 524288, sampleRate: 44100, channels: 1 },
 };
+export const WARP_MODES = ["None", "Sync", "PWM", "Bend +", "Bend -", "Soft Clip", "Hard Clip", "Tape Saturation", "Tube", "Wavefold", "Quantize", "Self Phase Distortion"] as const;
 export const FILTER_TYPES = [
   "MG Low 12", "MG Low 24", "Low 12", "Low 24", "High 12", "Band 12", "Peak 12", "Comb +", "Acid Ladder", "Diode LP", "Formant",
 ] as const;
@@ -32,7 +33,7 @@ export const MOD_TARGETS = [
 export const DIST_MODES = ["Tube", "Soft Clip", "Hard Clip", "Diode", "Bit Crush", "Downsample"] as const;
 
 export interface Osc {
-  enabled: boolean; wavetable: string; wtPos: number; octave: number; semi: number; fine: number;
+  enabled: boolean; wavetable: string; wtPos: number; warpMode: (typeof WARP_MODES)[number]; warpAmount: number; octave: number; semi: number; fine: number;
   unison: number; detune: number; blend: number; level: number; pan: number;
 }
 export interface Env { attack: number; hold: number; decay: number; sustain: number; release: number }
