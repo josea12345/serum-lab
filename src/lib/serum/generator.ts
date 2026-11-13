@@ -3,7 +3,7 @@ import { CATEGORIES, type Category, type Patch } from "./types";
 import { MUTATORS, type MutatorKey } from "./variations";
 import { clamp, hash, newId, round } from "./util";
 
-export interface GenerateRequest { prompt: string; category: Category }
+export interface GenerateRequest { prompt: string; category: Category; variation?: number }
 /** Any generator (keyword engine today, an AI model later) implements this. */
 export interface PatchGenerator {
   id: string;
@@ -182,6 +182,113 @@ function shapePatch(p: Patch, intent: Intent, text: string) {
   }
 }
 
+/** Final mix-aware voicing pass. Each source must earn its place; FX are not a substitute for source design. */
+function applyProductionVoicing(p: Patch, category: Category, prompt: string, variation = 0) {
+  const t = prompt.toLowerCase();
+  const wide = has(t, ["wide", "stereo", "lush", "massive", "huge"]);
+  const wet = has(t, ["ambient", "spacious", "cinematic", "washed", "ethereal", "long reverb"]);
+  const dirty = has(t, ["dirty", "gritty", "saturated", "distorted", "aggressive"]);
+  const minimal = has(t, ["dry", "intimate", "close", "minimal", "focused", "mono"]);
+  const architecture = Math.max(0, variation) % 4;
+
+  // Start from a restrained mix. Turn an effect on only when it has a musical job.
+  p.fx.distortion.enabled = dirty;
+  p.fx.distortion.drive = dirty ? 12 : 0;
+  p.fx.distortion.mix = dirty ? 18 : 0;
+  p.fx.chorus.enabled = wide && category !== "Bass";
+  p.fx.chorus.mix = p.fx.chorus.enabled ? 16 : 0;
+  p.fx.dimension.enabled = wide && category !== "Bass" && category !== "Keys";
+  p.fx.dimension.mix = p.fx.dimension.enabled ? 12 : 0;
+  p.fx.delay.enabled = has(t, ["delay", "echo", "dotted", "ping pong"]);
+  p.fx.delay.mix = p.fx.delay.enabled ? 14 : 0;
+  p.fx.reverb.enabled = wet || category === "Pad" || category === "Texture";
+  p.fx.reverb.mix = p.fx.reverb.enabled ? (category === "Texture" ? 32 : category === "Pad" ? 26 : 20) : 0;
+  p.fx.reverb.decay = category === "Texture" ? 7 : category === "Pad" ? 5.5 : 2.8;
+  p.fx.compressor.enabled = category === "Bass" || dirty;
+  p.fx.compressor.ratio = category === "Bass" ? 2.5 : 2;
+  p.fx.compressor.mix = 35;
+  p.fx.eq.enabled = true;
+  p.fx.eq.lowGain = category === "Bass" ? 0 : -1.5;
+  p.fx.eq.highGain = category === "Texture" ? 0 : -1;
+
+  // Remove the common beginner mistake: excessive unison on every source.
+  p.oscA.unison = Math.min(p.oscA.unison, category === "Pad" ? 6 : category === "Lead" ? 4 : 3);
+  p.oscB.unison = Math.min(p.oscB.unison, category === "Pad" ? 4 : 2);
+  p.oscC.unison = Math.min(p.oscC.unison, 3);
+  p.oscA.detune = Math.min(p.oscA.detune, category === "Pad" ? 24 : 14);
+  p.oscB.detune = Math.min(p.oscB.detune, 12);
+  p.oscC.detune = Math.min(p.oscC.detune, 10);
+
+  // Distinct source roles: main body (A), upper articulation/edge (B), optional air (C).
+  if (category === "Keys" || category === "Pluck") {
+    p.oscA.level = 72;
+    p.oscA.unison = architecture === 2 ? 3 : 1;
+    p.oscB.enabled = true;
+    p.oscB.octave = Math.max(1, p.oscB.octave);
+    p.oscB.level = architecture === 1 ? 34 : 22;
+    p.oscB.unison = 1;
+    p.oscC.enabled = architecture === 2 && wide;
+    p.oscC.level = p.oscC.enabled ? 12 : 0;
+    p.ampEnv.attack = Math.min(p.ampEnv.attack, 4);
+    if (category === "Pluck") {
+      p.ampEnv.decay = Math.min(p.ampEnv.decay, 520);
+      p.ampEnv.sustain = 0;
+      p.ampEnv.release = Math.min(p.ampEnv.release, 420);
+      p.env2.decay = Math.min(p.env2.decay, 280);
+      p.env2.amount = Math.max(p.env2.amount, 38);
+    } else {
+      p.ampEnv.decay = Math.max(p.ampEnv.decay, 850);
+      p.ampEnv.sustain = Math.min(p.ampEnv.sustain, 58);
+      p.ampEnv.release = wet ? 1100 : 420;
+    }
+  } else if (category === "Bass") {
+    p.global.voices = 1;
+    p.oscA.unison = 1; p.oscA.detune = 0; p.oscA.pan = 0;
+    p.oscB.unison = 1; p.oscB.detune = 0; p.oscB.pan = 0;
+    p.oscC.enabled = false;
+    p.sub.enabled = true; p.sub.level = Math.max(p.sub.level, 42);
+    p.fx.chorus.enabled = false; p.fx.dimension.enabled = false; p.fx.reverb.enabled = false;
+    p.fx.delay.enabled = has(t, ["delay", "echo"]);
+    p.filter.cutoff = Math.min(p.filter.cutoff, 1800);
+    p.ampEnv.attack = Math.min(p.ampEnv.attack, 3);
+    p.ampEnv.release = Math.min(p.ampEnv.release, 180);
+  } else if (category === "Lead") {
+    p.oscA.level = 68;
+    p.oscB.enabled = true; p.oscB.level = 26; p.oscB.unison = 2;
+    p.oscC.enabled = architecture === 2 && wide; p.oscC.level = p.oscC.enabled ? 12 : 0;
+    p.ampEnv.attack = Math.min(p.ampEnv.attack, 8);
+    p.ampEnv.sustain = Math.max(p.ampEnv.sustain, 72);
+    p.ampEnv.release = Math.min(p.ampEnv.release, 500);
+    p.global.voices = 1;
+  } else if (category === "Pad" || category === "Texture") {
+    p.oscA.unison = wide ? 6 : 4;
+    p.oscB.enabled = true; p.oscB.level = 28; p.oscB.unison = 3;
+    p.oscC.enabled = architecture === 1 || category === "Texture";
+    p.oscC.level = p.oscC.enabled ? 16 : 0;
+    p.ampEnv.attack = Math.max(p.ampEnv.attack, category === "Pad" ? 650 : 1100);
+    p.ampEnv.sustain = Math.max(p.ampEnv.sustain, 72);
+    p.ampEnv.release = Math.max(p.ampEnv.release, category === "Pad" ? 2400 : 3200);
+  }
+
+  if (architecture === 1 && category !== "Bass") {
+    p.oscA.unison = 1;
+    p.oscB.enabled = true;
+    p.oscB.level = Math.min(p.oscB.level, 24);
+  } else if (architecture === 3 && category !== "Bass" && category !== "Pad") {
+    p.oscB.enabled = false;
+    p.oscC.enabled = false;
+    p.oscA.unison = 1;
+  }
+  if (minimal) {
+    p.fx.reverb.enabled = false; p.fx.delay.enabled = false;
+    p.fx.chorus.enabled = false; p.fx.dimension.enabled = false;
+    p.oscA.unison = Math.min(p.oscA.unison, 2);
+  }
+  // Preserve a stable center and avoid stacking wet processors by default.
+  if (!wet) p.fx.reverb.mix = Math.min(p.fx.reverb.mix, category === "Pad" ? 24 : 16);
+  p.global.master = Math.min(p.global.master, 78);
+}
+
 export function generatePatch(req: GenerateRequest, now = new Date().toISOString(), id = newId()): Patch {
   const text = req.prompt.toLowerCase();
   const category = detectCategory(text, req.category);
@@ -190,6 +297,7 @@ export function generatePatch(req: GenerateRequest, now = new Date().toISOString
   matched.forEach((r) => MUTATORS[r.mut](p));
   const intent = interpretPrompt(req.prompt, category);
   shapePatch(p, intent, text);
+  applyProductionVoicing(p, category, text, req.variation ?? 0);
 
   // Make the bass path mono and focused unless the user explicitly asks for width.
   if (category === "Bass" && intent.width !== "Wide stereo") {
@@ -200,11 +308,11 @@ export function generatePatch(req: GenerateRequest, now = new Date().toISOString
   }
   p.filter.cutoff = round(clamp(p.filter.cutoff, 20, 20000), 10);
   p.id = id;
-  const h = hash(text + category);
+  const h = hash(text + category + (req.variation ? ":architecture:" + (req.variation % 4) : ""));
   p.name = `${ADJ[h % ADJ.length]} ${NOUN[category][(h >> 4) % NOUN[category].length]}`;
   p.prompt = req.prompt.trim();
   p.tags = [...new Set([category, ...matched.map((r) => r.tag), intent.role.split(" ")[0], intent.envelope.split(" ")[0]])];
-  p.description = `${intent.role}. ${intent.envelope} envelope; ${intent.tone.toLowerCase()} tone; ${intent.motion.toLowerCase()}; ${intent.width.toLowerCase()} image; ${intent.density.toLowerCase()} structure; ${intent.space.toLowerCase()} ambience. Suggested source: ${p.oscA.wavetable} (A) + ${p.oscB.enabled ? p.oscB.wavetable + " (B)" : "OSC A solo"}. ${p.filter.type} filter at ${p.filter.cutoff} Hz.`;
+  p.description = `${intent.role}. ${intent.envelope} envelope; ${intent.tone.toLowerCase()} tone; ${intent.motion.toLowerCase()}; ${intent.width.toLowerCase()} image; ${intent.density.toLowerCase()} structure; ${intent.space.toLowerCase()} ambience. Layer roles: A carries the core tone, ${p.oscB.enabled ? "B adds upper articulation" : "single-source focused voice"}${p.oscC.enabled ? ", C adds a restrained air layer" : ""}. FX are restrained to preserve transient clarity and mix headroom. ${p.filter.type} filter at ${p.filter.cutoff} Hz.`;
   p.createdAt = now;
   p.updatedAt = now;
   return p;
