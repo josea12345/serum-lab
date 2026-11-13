@@ -75,7 +75,7 @@ function targetRoute(target:string,source:number,amount:number,fxReverbIndex:num
 function writeMacros(tree:Record<string,Value>,patch:Patch){
  patch.macros.slice(0,8).forEach((macro,index)=>{
   const name="Macro"+index;
-  set(tree,name,{kParamValue:macro.value/100});
+  set(tree,name,{kParamValue:macro.value});
   const module=tree[name] as Record<string,Value>;
   module.name=macro.name.slice(0,24);
  });
