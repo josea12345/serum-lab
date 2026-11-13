@@ -42,6 +42,7 @@ function targetRoute(target:string,source:number,amount:number,fxReverbIndex:num
   "Filter Cutoff":{destType:"VoiceFilter",destId:0,param:"kParamFreq",paramId:3},
   "Osc A WT Pos":{destType:"WTOsc",destId:0,param:"kParamTablePos",paramId:6},
   "Osc B WT Pos":{destType:"WTOsc",destId:1,param:"kParamTablePos",paramId:6},
+  "Osc C WT Pos":{destType:"WTOsc",destId:2,param:"kParamTablePos",paramId:6},
   "Osc A Fine":{destType:"Oscillator",destId:0,param:"kParamFine",paramId:5,bipolar:true},
   "Osc B Fine":{destType:"Oscillator",destId:1,param:"kParamFine",paramId:5,bipolar:true},
   "Osc B Level":{destType:"Oscillator",destId:1,param:"kParamVolume",paramId:1},
