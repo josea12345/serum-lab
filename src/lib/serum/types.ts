@@ -11,7 +11,7 @@ export const FILTER_TYPES = [
 ] as const;
 export const LFO_SHAPES = ["Sine", "Triangle", "Saw", "Square", "Random S&H"] as const;
 export const MOD_TARGETS = [
-  "Filter Cutoff", "Osc A WT Pos", "Osc B WT Pos", "Osc A Fine", "Osc B Fine", "Osc B Level", "Amp Level", "Pan", "Reverb Mix",
+  "Filter Cutoff", "Osc A WT Pos", "Osc B WT Pos", "Osc C WT Pos", "Osc A Fine", "Osc B Fine", "Osc B Level", "Amp Level", "Pan", "Reverb Mix",
 ] as const;
 export const DIST_MODES = ["Tube", "Soft Clip", "Hard Clip", "Diode", "Bit Crush", "Downsample"] as const;
 
