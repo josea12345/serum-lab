@@ -4,6 +4,7 @@ import { applyVariation } from "./variations";
 import { generatePatch } from "./generator";
 import { EXPORTERS, buildSpec } from "./export";
 import { upgradePatch } from "./storage";
+import { SERUM_FACTORY_WAVETABLES, WAVETABLES } from "./types";
 
 describe("Serum Lab engine", () => {
   it("starter preset is CELESTIAL KEYS in Keys", () => {
@@ -31,6 +32,15 @@ describe("Serum Lab engine", () => {
     const upgraded = upgradePatch(legacy as typeof CELESTIAL_KEYS);
     expect(upgraded.oscC.enabled).toBe(false);
     expect(upgraded.oscA.wavetable).toBe(CELESTIAL_KEYS.oscA.wavetable);
+  });
+  it("legacy descriptive wavetable labels migrate to real Serum factory tables", () => {
+    const legacy = { ...CELESTIAL_KEYS, oscA: { ...CELESTIAL_KEYS.oscA, wavetable: "Warm FM" } };
+    expect(upgradePatch(legacy).oscA.wavetable).toBe("Warm Analog / DM-OSCAR");
+  });
+  it("every selectable wavetable has an exact Serum factory file reference", () => {
+    expect(Object.keys(SERUM_FACTORY_WAVETABLES).sort()).toEqual([...WAVETABLES].sort());
+    expect(SERUM_FACTORY_WAVETABLES["FM Piano"].path).toBe("S2 Tables/Digital/FM Piano.wav");
+    expect(SERUM_FACTORY_WAVETABLES["JF Flute"].frames).toBe(524288);
   });
   it("native export is available as beta and JSON is labeled non-native", () => {
     expect(EXPORTERS.find((e) => e.id === "serum2-native")?.available).toBe(true);
