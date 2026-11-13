@@ -59,7 +59,8 @@ export function planSoundArchitecture(prompt: string, category: Category, variat
     { id: "digital-hybrid", name: "Digital hybrid voice", sourcePlan: "A: Basic OPL digital source; B: DM-OSCAR warm body; controlled warp and envelope contrast.", reason: "Contrasting digital attack and analog body produce a distinct voice." },
   ];
 
-  const chosen = family[((Math.max(0, variation) + (evolving && family.length > 2 ? 1 : 0)) % family.length)];
+  const preferenceOffset = rhodes && !piano && family.some((item) => item.id === "rhodes-keys") ? 1 : 0;
+  const chosen = family[((Math.max(0, variation) + preferenceOffset + (evolving && family.length > 2 ? 1 : 0)) % family.length)];
   return chosen;
 }
 
