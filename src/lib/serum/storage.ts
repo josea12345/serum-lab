@@ -9,7 +9,25 @@ function mergeDefaults<T>(defaults: T, value: unknown): T {
   }
   return (value === undefined ? defaults : value) as T;
 }
-export function upgradePatch(value: Patch): Patch { return mergeDefaults(CELESTIAL_KEYS, value); }
+export function upgradePatch(value: Patch): Patch {
+ const patch = mergeDefaults(CELESTIAL_KEYS, value);
+ const aliases: Record<string,string> = {
+  "Warm FM":"Warm Analog / DM-OSCAR",
+  "Digital Bell":"FM Piano",
+  "Spectral Pad":"Harmonic Series Smooth",
+  "Saw Stack":"Analog / Basic Shapes",
+  "Soft Square":"Warm Sub",
+  "Pulse Width":"PWM / Juno",
+  "Glass Partials":"Harmonic Series Smooth",
+  "Granular Air":"Dying Sine",
+  "Noise Shimmer":"Digital / Basic OPL",
+ };
+ for (const key of ["oscA","oscB","oscC"] as const) {
+  patch[key].wavetable = aliases[patch[key].wavetable] || patch[key].wavetable;
+  if (!["Default Shapes","Analog / Basic Shapes","Warm Analog / DM-OSCAR","PWM / Juno","Analog / Basic Mini","Warm Sub","Digital / Basic OPL","Harmonic Series Smooth","Dying Sine","Acid","FM Piano","JF Flute"].includes(patch[key].wavetable)) patch[key].wavetable = "Default Shapes";
+ }
+ return patch;
+}
 const KEY = "serumlab.library.v1";
 const CURRENT = "serumlab.current.v1";
 
