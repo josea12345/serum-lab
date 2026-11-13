@@ -58,8 +58,13 @@ export const Route = createFileRoute("/api/generate")({
         }
         if (!response.ok) {
           const detail = (await response.text()).slice(0, 500);
-          const status = response.status === 429 ? 429 : response.status === 403 ? 503 : 502;
-          return Response.json({ error: response.status === 429 ? "Gemini's free usage limit has been reached for now. Please try again after the quota resets." : "Gemini API returned " + response.status + ": " + detail }, { status });
+          const status = response.status === 429 ? 429 : response.status === 403 || response.status === 503 ? 503 : 502;
+          const message = response.status === 429
+            ? "Gemini's free usage limit has been reached for now. Please try again after the quota resets."
+            : response.status === 503
+              ? "Gemini is temporarily overloaded. Please try Generate again in a moment."
+              : "Gemini API returned " + response.status + ": " + detail;
+          return Response.json({ error: message }, { status });
         }
         const data = await response.json() as any;
         const raw = data.candidates?.[0]?.content?.parts?.map((part: { text?: string }) => part.text ?? "").join("");
