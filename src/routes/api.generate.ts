@@ -227,7 +227,7 @@ export const Route = createFileRoute("/api/generate")({
         patch.global.portamento = clamp(patch.global.portamento, 0, 2000, 0);
         patch.global.master = clamp(patch.global.master, 0, 100, 75);
         const quality = evaluateAndRepairPatch(patch, prompt);
-        patch.description = (patch.description + " Design QA: " + quality.checks.length + " structural checks passed" + (quality.warnings.length ? ". " + quality.warnings.join(" ") : "")).slice(0, 1000);
+        patch.description = (patch.description + " Architecture: " + architecture.name + ". " + architecture.reason + " Design QA: " + quality.checks.length + " structural checks passed" + (quality.warnings.length ? ". " + quality.warnings.join(" ") : "")).slice(0, 1000);
         return Response.json({ patch, model: modelUsed + " (free tier)", quality, architecture });
       } catch (error) {
         return Response.json({ error: error instanceof Error ? error.message : "Patch generation failed." }, { status: 500 });
