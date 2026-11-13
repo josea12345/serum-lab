@@ -38,9 +38,9 @@ export const EXPORTERS: Exporter[] = [
     label: "Native .SerumPreset",
     extension: "SerumPreset",
     mime: "application/octet-stream",
-    available: false,
+    available: true,
     verified: false,
-    unavailableReason: "Export format not yet verified. No reliable Serum 2 preset schema is available, so native export is disabled.",
+    unavailableReason: "Beta export uses your Serum 2 Init template. It currently maps oscillator, envelope and filter fundamentals; FX, modulation and some advanced controls are not yet mapped.",
   },
 ];
 

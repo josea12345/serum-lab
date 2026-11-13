@@ -5,6 +5,7 @@ import { CELESTIAL_KEYS } from "@/lib/serum/presets";
 import { activeGenerator } from "@/lib/serum/generator";
 import { VARIATIONS, applyVariation, type MutatorKey } from "@/lib/serum/variations";
 import { EXPORTERS, downloadBlob, fileName } from "@/lib/serum/export";
+import { buildNativePreset } from "@/lib/serum/native";
 import { loadCurrent, loadLibrary, saveCurrent, saveLibrary, upsert } from "@/lib/serum/storage";
 import { getPath, newId, setPath } from "@/lib/serum/util";
 import {
@@ -148,6 +149,16 @@ export function SerumLab() {
     const ex = EXPORTERS.find((e) => e.id === "json-spec")!;
     downloadBlob(ex.serialize!(patch), fileName(patch, ex.extension));
     flash("Exported JSON patch specification");
+  };
+  const exportNative = async () => {
+    try {
+      flash("Building native Serum 2 preset…");
+      const blob = await buildNativePreset(patch);
+      downloadBlob(blob, fileName(patch, "SerumPreset"));
+      flash("Native preset exported — load it in Serum 2 to verify.");
+    } catch (error) {
+      flash(error instanceof Error ? error.message : "Native export failed.");
+    }
   };
   const native = EXPORTERS.find((e) => e.id === "serum2-native")!;
   const dirty = JSON.stringify(patch) !== JSON.stringify(baseline);
@@ -310,10 +321,10 @@ export function SerumLab() {
               <div className="mt-3 rounded-lg border border-dashed border-border p-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold">{native.label}</span>
-                  <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">NOT VERIFIED</span>
+                  <span className="rounded bg-amber-500/10 px-1.5 py-0.5 font-mono text-[10px] text-amber-400">BETA</span>
                 </div>
                 <p className="mt-1 text-xs text-muted-foreground">{native.unavailableReason}</p>
-                <button disabled className={cn(btn, "mt-2 w-full")}>Export .SerumPreset</button>
+                <button onClick={() => void exportNative()} disabled={!native.available} className={cn(btn, "mt-2 w-full")}>Export .SerumPreset</button>
               </div>
             </Panel>
             <Panel title="LIBRARY" right={<span className="font-mono text-[10px] text-muted-foreground">{library.length} saved</span>}>
