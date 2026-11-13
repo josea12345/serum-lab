@@ -4,7 +4,7 @@ import { applyVariation } from "./variations";
 import { generatePatch } from "./generator";
 import { EXPORTERS, buildSpec } from "./export";
 import { upgradePatch } from "./storage";
-import { SERUM_FACTORY_WAVETABLES, WAVETABLES } from "./types";
+import { SERUM_FACTORY_WAVETABLES, WAVETABLES, WARP_MODES } from "./types";
 
 describe("Serum Lab engine", () => {
   it("starter preset is CELESTIAL KEYS in Keys", () => {
@@ -41,6 +41,17 @@ describe("Serum Lab engine", () => {
     expect(Object.keys(SERUM_FACTORY_WAVETABLES).sort()).toEqual([...WAVETABLES].sort());
     expect(SERUM_FACTORY_WAVETABLES["FM Piano"].path).toBe("S2 Tables/Digital/FM Piano.wav");
     expect(SERUM_FACTORY_WAVETABLES["JF Flute"].frames).toBe(524288);
+  });
+  it("starter oscillators initialize both warp lanes to neutral", () => {
+    for (const osc of [CELESTIAL_KEYS.oscA, CELESTIAL_KEYS.oscB, CELESTIAL_KEYS.oscC]) {
+      expect(osc.warpMode).toBe("None");
+      expect(osc.warpAmount).toBe(0);
+      expect(osc.warpMode2).toBe("None");
+      expect(osc.warpAmount2).toBe(0);
+    }
+  });
+  it("warp options are restricted to the empirically supported Serum 2 subset", () => {
+    expect(WARP_MODES).toEqual(["None", "Sync", "PWM", "Bend +", "Wavefold", "Soft Clip", "Hard Clip", "Quantize", "Filter LPF", "Filter HPF", "FM (Osc)", "AM (Osc)"]);
   });
   it("native export is available as beta and JSON is labeled non-native", () => {
     expect(EXPORTERS.find((e) => e.id === "serum2-native")?.available).toBe(true);
