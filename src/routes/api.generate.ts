@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { categoryBase } from "@/lib/serum/presets";
 import { SERUM_2_DESIGN_BIBLE } from "@/lib/serum/knowledge";
-import { CATEGORIES, type Category, type Patch } from "@/lib/serum/types";
+import { CATEGORIES, DIST_MODES, FILTER_TYPES, LFO_SHAPES, MOD_TARGETS, WAVETABLES, type Category, type Patch } from "@/lib/serum/types";
 function merge(base: any, incoming: any): any {
   if (Array.isArray(base)) return Array.isArray(incoming) ? incoming : base;
   if (base && typeof base === "object") {
@@ -65,6 +65,63 @@ export const Route = createFileRoute("/api/generate")({
         patch.ampEnv.decay = clamp(patch.ampEnv.decay, 0, 10000, 500);
         patch.ampEnv.sustain = clamp(patch.ampEnv.sustain, 0, 100, 50);
         patch.ampEnv.release = clamp(patch.ampEnv.release, 0, 15000, 300);
+        const sanitizeOsc = (osc: Patch["oscA"], fallback: Patch["oscA"]) => {
+          osc.wavetable = WAVETABLES.includes(osc.wavetable as typeof WAVETABLES[number]) ? osc.wavetable : fallback.wavetable;
+          osc.wtPos = clamp(osc.wtPos, 0, 100, fallback.wtPos);
+          osc.octave = Math.round(clamp(osc.octave, -4, 4, fallback.octave));
+          osc.semi = Math.round(clamp(osc.semi, -12, 12, fallback.semi));
+          osc.fine = clamp(osc.fine, -100, 100, fallback.fine);
+          osc.unison = Math.round(clamp(osc.unison, 1, 16, fallback.unison));
+          osc.detune = clamp(osc.detune, 0, 100, fallback.detune);
+          osc.blend = clamp(osc.blend, 0, 100, fallback.blend);
+          osc.level = clamp(osc.level, 0, 100, fallback.level);
+          osc.pan = clamp(osc.pan, -50, 50, fallback.pan);
+        };
+        sanitizeOsc(patch.oscA, base.oscA); sanitizeOsc(patch.oscB, base.oscB);
+        patch.sub.octave = Math.round(clamp(patch.sub.octave, -4, 4, base.sub.octave));
+        patch.sub.level = clamp(patch.sub.level, 0, 100, base.sub.level);
+        patch.noise.level = clamp(patch.noise.level, 0, 100, base.noise.level);
+        patch.filter.type = FILTER_TYPES.includes(patch.filter.type as typeof FILTER_TYPES[number]) ? patch.filter.type : base.filter.type;
+        patch.filter.drive = clamp(patch.filter.drive, 0, 100, base.filter.drive);
+        patch.filter.mix = clamp(patch.filter.mix, 0, 100, base.filter.mix);
+        for (const env of [patch.ampEnv, patch.env2]) {
+          env.attack = clamp(env.attack, 0, 15000, 5);
+          env.hold = clamp(env.hold, 0, 10000, 0);
+          env.decay = clamp(env.decay, 0, 15000, 500);
+          env.sustain = clamp(env.sustain, 0, 100, 50);
+          env.release = clamp(env.release, 0, 15000, 300);
+        }
+        patch.env2.amount = clamp(patch.env2.amount, 0, 100, base.env2.amount);
+        patch.env2.target = MOD_TARGETS.includes(patch.env2.target as typeof MOD_TARGETS[number]) ? patch.env2.target : base.env2.target;
+        for (const lfo of [patch.lfo1, patch.lfo2]) {
+          lfo.shape = LFO_SHAPES.includes(lfo.shape as typeof LFO_SHAPES[number]) ? lfo.shape : "Sine";
+          lfo.rate = clamp(lfo.rate, 0.01, 30, 0.25);
+          lfo.amount = clamp(lfo.amount, 0, 100, 0);
+          lfo.target = MOD_TARGETS.includes(lfo.target as typeof MOD_TARGETS[number]) ? lfo.target : "Filter Cutoff";
+        }
+        patch.fx.distortion.mode = DIST_MODES.includes(patch.fx.distortion.mode as typeof DIST_MODES[number]) ? patch.fx.distortion.mode : "Tube";
+        patch.fx.distortion.drive = clamp(patch.fx.distortion.drive, 0, 100, 14);
+        patch.fx.distortion.mix = clamp(patch.fx.distortion.mix, 0, 100, 30);
+        patch.fx.chorus.rate = clamp(patch.fx.chorus.rate, 0.01, 20, 0.6);
+        patch.fx.chorus.depth = clamp(patch.fx.chorus.depth, 0, 100, 32);
+        patch.fx.chorus.mix = clamp(patch.fx.chorus.mix, 0, 100, 35);
+        patch.fx.delay.time = clamp(patch.fx.delay.time, 1, 2000, 375);
+        patch.fx.delay.feedback = clamp(patch.fx.delay.feedback, 0, 100, 32);
+        patch.fx.delay.mix = clamp(patch.fx.delay.mix, 0, 100, 18);
+        patch.fx.reverb.size = clamp(patch.fx.reverb.size, 0, 100, 78);
+        patch.fx.reverb.decay = clamp(patch.fx.reverb.decay, 0.1, 20, 5.5);
+        patch.fx.reverb.damping = clamp(patch.fx.reverb.damping, 0, 100, 55);
+        patch.fx.reverb.mix = clamp(patch.fx.reverb.mix, 0, 100, 32);
+        patch.fx.eq.lowGain = clamp(patch.fx.eq.lowGain, -12, 12, -2);
+        patch.fx.eq.highGain = clamp(patch.fx.eq.highGain, -12, 12, -3);
+        patch.fx.compressor.threshold = clamp(patch.fx.compressor.threshold, -60, 0, -18);
+        patch.fx.compressor.ratio = clamp(patch.fx.compressor.ratio, 1, 20, 2.5);
+        patch.fx.compressor.mix = clamp(patch.fx.compressor.mix, 0, 100, 70);
+        patch.fx.dimension.size = clamp(patch.fx.dimension.size, 0, 100, 55);
+        patch.fx.dimension.mix = clamp(patch.fx.dimension.mix, 0, 100, 40);
+        patch.global.voices = Math.round(clamp(patch.global.voices, 1, 32, 8));
+        patch.global.portamento = clamp(patch.global.portamento, 0, 2000, 0);
+        patch.global.master = clamp(patch.global.master, 0, 100, 75);
         return Response.json({ patch, model: "gemini-3.8-flash (free tier)" });
       } catch (error) {
         return Response.json({ error: error instanceof Error ? error.message : "Patch generation failed." }, { status: 500 });
