@@ -1,6 +1,7 @@
 import { init as initZstd, compress, decompress } from "@bokuweb/zstd-wasm";
 import SparkMD5 from "spark-md5";
 import { SERUM_FACTORY_WAVETABLES, type Patch } from "./types";
+import { MULTISAMPLE_INSTRUMENTS } from "./multisample";
 type Value = null | boolean | number | string | Uint8Array | Value[] | { [key: string]: Value };
 const te = new TextEncoder(), td = new TextDecoder();
 let ready: Promise<void> | undefined;
@@ -16,9 +17,19 @@ function params(tree:Record<string,Value>,name:string):Record<string,Value>{cons
 function set(tree:Record<string,Value>,name:string,values:Record<string,Value>){const mod=tree[name] as Record<string,Value>,p=params(tree,name);Object.entries(values).forEach(([k,v])=>p[k]=v);mod.plainParams=p;}
 function osc(tree:Record<string,Value>,slot:number,o:Patch["oscA"]){
  const name="Oscillator"+slot;
- set(tree,name,{kParamEnable:o.enabled?1:0,kParamType:"kOsc_WT",kParamVolume:o.level/100,kParamPan:o.pan/50,kParamOctave:o.octave,kParamPitch:o.semi,kParamFine:o.fine,kParamUnison:o.unison,kParamDetune:(o.detune/100)**2});
+ set(tree,name,{kParamEnable:o.enabled?1:0,kParamType:o.engine==="multisample"?"kOsc_MultiSample":"kOsc_WT",kParamVolume:o.level/100,kParamPan:o.pan/50,kParamOctave:o.octave,kParamPitch:o.semi,kParamFine:o.fine,kParamUnison:o.unison,kParamDetune:(o.detune/100)**2});
  if(slot<3){
-  const mod=tree[name] as Record<string,Value>,wt=mod["WTOsc"+slot] as Record<string,Value>;
+  const mod=tree[name] as Record<string,Value>;
+  if(o.engine==="multisample"){
+   const instrument=MULTISAMPLE_INSTRUMENTS[o.multisampleInstrument]||MULTISAMPLE_INSTRUMENTS.piano_grand;
+   const source=mod["MultiSampleOsc"+slot] as Record<string,Value>;
+   source.sfzPathRelative=instrument.sfzPathRelative;
+   source.embedded_sfz=instrument.embeddedSfz;
+   source.files=instrument.files as unknown as Value;
+   source.plainParams={kParamEnvAttack:o.multisampleAttack,kParamEnvDecay:o.multisampleDecay,kParamEnvRelease:o.multisampleRelease};
+   return;
+  }
+  const wt=mod["WTOsc"+slot] as Record<string,Value>;
   const p=wt.plainParams==="default"?{}:wt.plainParams as Record<string,Value>;
   const warpEnums:Record<string,string>={"FM (Osc)":"kFM_OSC","AM (Osc)":"kAM_OSC","Sync":"kSync","PWM":"kPWM","Bend +":"kBendPos","Wavefold":"kDistLinFold","Soft Clip":"kDistSoftClip","Hard Clip":"kDistHardClip","Quantize":"kQuantize","Filter LPF":"kFilterLPF","Filter HPF":"kFilterHPF"};
   if(o.warpMode!=="None"&&o.warpAmount>0){p.kParamWarp=o.warpAmount/100;p.kParamWarpMenu=warpEnums[o.warpMode];}
