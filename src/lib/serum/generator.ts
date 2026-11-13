@@ -271,10 +271,14 @@ function applyProductionVoicing(p: Patch, category: Category, prompt: string, va
   }
 
   if (architecture === 1 && category !== "Bass") {
+    p.oscA.warpMode = "Sync"; p.oscA.warpAmount = 24;
     p.oscA.unison = 1;
     p.oscB.enabled = true;
     p.oscB.level = Math.min(p.oscB.level, 24);
+  } else if (architecture === 2 && category !== "Bass") {
+    p.oscB.warpMode = "PWM"; p.oscB.warpAmount = 28;
   } else if (architecture === 3 && category !== "Bass" && category !== "Pad") {
+    p.oscA.warpMode = "Bend +"; p.oscA.warpAmount = 16;
     p.oscB.enabled = false;
     p.oscC.enabled = false;
     p.oscA.unison = 1;
