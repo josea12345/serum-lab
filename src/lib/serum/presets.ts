@@ -9,9 +9,9 @@ export const CELESTIAL_KEYS: Patch = {
   category: "Keys",
   tags: ["Keys", "Dreamy", "Dark", "Bell", "Wide", "Spacious"],
   prompt: "dreamy futuristic dark melodic keys with a soft bell transient",
-  oscA: { enabled: true, wavetable: "Warm Analog / DM-OSCAR", wtPos: 32, octave: 0, semi: 0, fine: 0, unison: 3, detune: 12, blend: 40, level: 78, pan: 0 },
-  oscB: { enabled: true, wavetable: "FM Piano", wtPos: 58, octave: 1, semi: 0, fine: 6, unison: 2, detune: 8, blend: 30, level: 42, pan: 0 },
-  oscC: { enabled: false, wavetable: "Harmonic Series Smooth", wtPos: 40, octave: 0, semi: 0, fine: 0, unison: 1, detune: 0, blend: 50, level: 25, pan: 0 },
+  oscA: { enabled: true, wavetable: "Warm Analog / DM-OSCAR", wtPos: 32, warpMode: "None", warpAmount: 0, octave: 0, semi: 0, fine: 0, unison: 3, detune: 12, blend: 40, level: 78, pan: 0 },
+  oscB: { enabled: true, wavetable: "FM Piano", wtPos: 58, warpMode: "None", warpAmount: 0, octave: 1, semi: 0, fine: 6, unison: 2, detune: 8, blend: 30, level: 42, pan: 0 },
+  oscC: { enabled: false, wavetable: "Harmonic Series Smooth", wtPos: 40, warpMode: "None", warpAmount: 0, octave: 0, semi: 0, fine: 0, unison: 1, detune: 0, blend: 50, level: 25, pan: 0 },
   sub: { enabled: true, octave: -1, level: 22 },
   noise: { enabled: false, level: 6 },
   filter: { enabled: true, type: "MG Low 24", cutoff: 2400, resonance: 18, drive: 12, mix: 100 },
@@ -44,7 +44,7 @@ export function categoryBase(cat: Category): Patch {
     case "Keys":
       break;
     case "Bass":
-      Object.assign(p.oscA, { wavetable: "Analog / Basic Shapes", wtPos: 20, octave: -1, unison: 1, detune: 0, level: 80 });
+      Object.assign(p.oscA, { wavetable: "Analog / Basic Shapes", wtPos: 20, warpMode: "None", warpAmount: 0, octave: -1, unison: 1, detune: 0, level: 80 });
       Object.assign(p.oscB, { wavetable: "Warm Sub", octave: -1, unison: 1, fine: 0, level: 35 });
       p.sub = { enabled: true, octave: -1, level: 60 };
       Object.assign(p.filter, { type: "MG Low 24", cutoff: 900, resonance: 22, drive: 30 });
