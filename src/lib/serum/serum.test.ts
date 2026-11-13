@@ -53,6 +53,11 @@ describe("Serum Lab engine", () => {
   it("warp options are restricted to the empirically supported Serum 2 subset", () => {
     expect(WARP_MODES).toEqual(["None", "Sync", "PWM", "Bend +", "Wavefold", "Soft Clip", "Hard Clip", "Quantize", "Filter LPF", "Filter HPF"]);
   });
+  it("starter patch exposes four performance macros with real destinations", () => {
+    expect(CELESTIAL_KEYS.macros).toHaveLength(4);
+    expect(CELESTIAL_KEYS.macros.map((m) => m.name)).toEqual(["TONE", "MOTION", "SPACE", "EDGE"]);
+    expect(CELESTIAL_KEYS.macros.every((m) => m.value >= 0 && m.value <= 100)).toBe(true);
+  });
   it("native export is available as beta and JSON is labeled non-native", () => {
     expect(EXPORTERS.find((e) => e.id === "serum2-native")?.available).toBe(true);
     expect(EXPORTERS.find((e) => e.id === "serum2-native")?.verified).toBe(false);
