@@ -28,23 +28,33 @@ export const Route = createFileRoute("/api/generate")({
         const system = "You are Serum Lab, a senior Serum 2 synthesist. Apply the following technical design curriculum as operating knowledge, not as optional inspiration. Return ONLY one complete JSON patch object matching the supplied schema. Use only schema fields and enum values. Envelope times are milliseconds; filter cutoff Hz; LFO rate Hz. Keep settings playable, mix-aware, and internally coherent. Never claim unsupported native preset functionality.\\n\\n" + SERUM_2_DESIGN_BIBLE;
         const direction = variation === 0 ? "Create the strongest first interpretation." : "Creative iteration " + (variation + 1) + ": create a genuinely different sound-design direction, not a small random tweak. Change the synthesis architecture, source character, envelope strategy, modulation and/or effects while preserving the brief. Previous patch to avoid repeating: " + previous;
         const user = "Brief: " + prompt + "\nCategory: " + category + "\nDirection: " + direction + "\n\nComplete output structure and valid enum examples: " + JSON.stringify(base) + "\n\nReturn a complete patch object. Give it a distinctive uppercase preset name, meaningful description and tags. Keep prompt equal to the brief.";
-        let response: Response;
-        try {
-          response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-            signal: AbortSignal.timeout(40000),
-            body: JSON.stringify({
-              systemInstruction: { parts: [{ text: system }] },
-              contents: [{ role: "user", parts: [{ text: user }] }],
-              generationConfig: { temperature: variation ? 0.95 : 0.75, maxOutputTokens: 5000, responseMimeType: "application/json", thinkingConfig: { thinkingLevel: "MEDIUM" } }
-            })
-          });
-        } catch (error) {
-          if (error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")) {
-            return Response.json({ error: "Gemini is taking too long to respond. Your request timed out safely—please try Generate again." }, { status: 504 });
+        let response: Response | undefined;
+        let timedOut = false;
+        // Gemini 3.8 Flash can be temporarily overloaded. Retry one time on
+        // a timeout or 503, while keeping the total request inside the UI deadline.
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+              signal: AbortSignal.timeout(18000),
+              body: JSON.stringify({
+                systemInstruction: { parts: [{ text: system }] },
+                contents: [{ role: "user", parts: [{ text: user }] }],
+                generationConfig: { temperature: variation ? 0.95 : 0.75, maxOutputTokens: 3500, responseMimeType: "application/json", thinkingConfig: { thinkingLevel: "MEDIUM" } }
+              })
+            });
+            if (response.status !== 503 || attempt === 1) break;
+            await response.body?.cancel();
+          } catch (error) {
+            if (!(error instanceof Error) || (error.name !== "TimeoutError" && error.name !== "AbortError")) throw error;
+            timedOut = true;
+            if (attempt === 1) break;
           }
-          throw error;
+          await new Promise((resolve) => setTimeout(resolve, 700));
+        }
+        if (!response || timedOut && response.status === 503) {
+          return Response.json({ error: "Gemini is temporarily overloaded and did not respond in time. Please try Generate again in a moment." }, { status: 504 });
         }
         if (!response.ok) {
           const detail = (await response.text()).slice(0, 500);
