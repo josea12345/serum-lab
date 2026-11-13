@@ -54,7 +54,7 @@ A modulation assignment is meaningful only when source, destination, depth, and 
 - Tempo-synced movement should be represented in musical divisions when supported; do not falsely label free-running Hz as tempo sync.
 - Random/sample-and-hold modulation suits unstable texture, analog drift, granular variation; keep depth subtle for pitch.
 - Pitch modulation: small amounts for vibrato/drift; large amounts create sirens, zaps, or FM-like effects.
-- WT-position modulation is useful only if the chosen table has evolving frames.
+- WT-position modulation is useful only if the chosen table has evolving frames. Oscillator C can supply a third independent tonal or transient layer; give it a distinct role rather than simply stacking another copy of A/B.
 - Filter-cutoff modulation should have a clear envelope/LFO shape and depth.
 Avoid assigning modulation to unsupported targets or describing matrix routings that are not represented in the returned patch.
 
