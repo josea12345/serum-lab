@@ -40,7 +40,7 @@ export const EXPORTERS: Exporter[] = [
     mime: "application/octet-stream",
     available: true,
     verified: false,
-    unavailableReason: "Native export uses your Serum 2 Init template. It writes oscillator controls, envelopes, filter settings, two LFO curves and supported modulation routes, supported FX units, and global voice settings. Wavetable file selection, advanced oscillator engines, mixer routing, and some advanced FX/modulation controls are not yet encoded.",
+    unavailableReason: "Native export uses your Serum 2 Init template. It writes oscillator A/B/C controls, envelopes, filter settings, two LFO curves and supported modulation routes, supported FX units, and global voice settings. Wavetable file selection, advanced oscillator engines, mixer routing, and some advanced FX/modulation controls are not yet encoded.",
   },
 ];
 
