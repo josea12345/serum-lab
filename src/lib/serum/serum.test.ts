@@ -22,8 +22,9 @@ describe("Serum Lab engine", () => {
     expect(a.category).toBe("Bass");
     expect(a).toEqual(b);
   });
-  it("native export is disabled and JSON is labeled non-native", () => {
-    expect(EXPORTERS.find((e) => e.id === "serum2-native")?.available).toBe(false);
+  it("native export is available as beta and JSON is labeled non-native", () => {
+    expect(EXPORTERS.find((e) => e.id === "serum2-native")?.available).toBe(true);
+    expect(EXPORTERS.find((e) => e.id === "serum2-native")?.verified).toBe(false);
     expect(buildSpec(CELESTIAL_KEYS).nativePresetFormat).toBe(false);
   });
 });
