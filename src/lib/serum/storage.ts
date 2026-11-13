@@ -11,6 +11,12 @@ function mergeDefaults<T>(defaults: T, value: unknown): T {
 }
 export function upgradePatch(value: Patch): Patch {
  const patch = mergeDefaults(CELESTIAL_KEYS, value);
+ const saved = value && typeof value === "object" ? value as unknown as Record<string, unknown> : {};
+ const savedMacros = Array.isArray(saved.macros) ? saved.macros : [];
+ patch.macros = CELESTIAL_KEYS.macros.map((fallback, index) => {
+  const macro = savedMacros[index] && typeof savedMacros[index] === "object" ? savedMacros[index] as Partial<typeof fallback> : {};
+  return { ...fallback, ...macro };
+ });
  const aliases: Record<string,string> = {
   "Warm FM":"Warm Analog / DM-OSCAR",
   "Digital Bell":"FM Piano",
