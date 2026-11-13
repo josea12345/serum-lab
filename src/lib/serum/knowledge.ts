@@ -27,10 +27,10 @@ For every layer, assign a role: (1) transient/attack, (2) tonal body, (3) harmon
 - Wide sheen: upper layer with modest detune/pan/unison; keep the fundamental/sub mono.
 - Reese/buzzy bass: harmonically rich saw/pulse-like layers, slight detune/phase movement, low-pass control; mono-compatible low end.
 - Metallic/bell: inharmonic or FM-like partials, often a separate high layer; short excitation with a controlled resonant tail.
-Never assume an arbitrary wavetable label is an installed Serum factory table name. The current patch schema's wavetable strings are descriptive timbre archetypes. Never invent a precise factory table path/name.
+Never assume an arbitrary wavetable label is an installed Serum factory table name. The current patch schema exposes a curated set of exact Serum 2 factory wavetable identities. Use only the listed table names supplied with the generation schema; do not invent a factory table path/name.
 
 HARMONICS, WARP AND FM
-A waveform's harmonic spectrum determines brightness and character. More upper partials usually read brighter/edgier; filtering removes or emphasizes bands. FM/ring modulation/phase distortion and wavetable warp can create complex sidebands and metallic/buzzy timbres, but the result depends on source frequency, modulation ratio/index, and note range. Use these techniques deliberately; do not claim a specific warp mode was programmed unless it exists in the patch schema/exporter. For a stable musical patch, avoid excessive inharmonicity unless the brief asks for metallic, clangorous, or experimental character.
+A waveform's harmonic spectrum determines brightness and character. More upper partials usually read brighter/edgier; filtering removes or emphasizes bands. FM/ring modulation/phase distortion and wavetable warp can create complex sidebands and metallic/buzzy timbres, but the result depends on source frequency, modulation ratio/index, and note range. Use these techniques deliberately; use only the explicitly supported self-contained warp modes or intentionally enabled cross-oscillator FM/AM modes. Serum's second warp lane can further shape the first stage; do not claim a warp stage unless it is represented in the patch. For a stable musical patch, avoid excessive inharmonicity unless the brief asks for metallic, clangorous, or experimental character.
 
 ENVELOPES AND ARTICULATION
 Think in milliseconds and in musical role:
