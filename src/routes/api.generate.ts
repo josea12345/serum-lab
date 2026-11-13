@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { categoryBase } from "@/lib/serum/presets";
+import { SERUM_2_DESIGN_BIBLE } from "@/lib/serum/knowledge";
 import { CATEGORIES, type Category, type Patch } from "@/lib/serum/types";
 function merge(base: any, incoming: any): any {
   if (Array.isArray(base)) return Array.isArray(incoming) ? incoming : base;
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/api/generate")({
         if (!prompt) return Response.json({ error: "Describe the sound first." }, { status: 400 });
         const base = categoryBase(category);
         const previous = body.previous ? JSON.stringify(body.previous).slice(0, 5000) : "None";
-        const system = "You are Serum Lab, an expert Serum 2 sound designer. Translate musical references into technically coherent, playable Serum 2 patches. Artist references describe broad musical traits only; do not claim to copy exact recordings or proprietary presets. Reason about oscillator source and harmonics, articulation, filter, modulation, stereo image and effects as one coherent instrument. Return ONLY one complete JSON patch object matching the supplied schema. Use valid schema fields and enum values. Envelope times are milliseconds; filter cutoff Hz; LFO rate Hz. Keep settings mix-ready and plausible. Distinctly design the sound rather than merely describing it.";
+        const system = "You are Serum Lab, a senior Serum 2 synthesist. Apply the following technical design curriculum as operating knowledge, not as optional inspiration. Return ONLY one complete JSON patch object matching the supplied schema. Use only schema fields and enum values. Envelope times are milliseconds; filter cutoff Hz; LFO rate Hz. Keep settings playable, mix-aware, and internally coherent. Never claim unsupported native preset functionality.\\n\\n" + SERUM_2_DESIGN_BIBLE;
         const direction = variation === 0 ? "Create the strongest first interpretation." : "Creative iteration " + (variation + 1) + ": create a genuinely different sound-design direction, not a small random tweak. Change the synthesis architecture, source character, envelope strategy, modulation and/or effects while preserving the brief. Previous patch to avoid repeating: " + previous;
         const user = "Brief: " + prompt + "\nCategory: " + category + "\nDirection: " + direction + "\n\nComplete output structure and valid enum examples: " + JSON.stringify(base) + "\n\nReturn a complete patch object. Give it a distinctive uppercase preset name, meaningful description and tags. Keep prompt equal to the brief.";
         const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent", {

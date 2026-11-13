@@ -220,7 +220,7 @@ export function SerumLab() {
             ))}
           </div>
           <p className="mt-4 font-mono text-[11px] text-muted-foreground">
-            Engine: Serum Lab AI · Claude Sonnet 4.6 · structured Serum 2 patch design
+            Engine: Serum Lab AI · Gemini 3.8 Flash · Serum 2 sound-design reasoning
           </p>
         </section>
 
