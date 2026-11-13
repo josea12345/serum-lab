@@ -16,8 +16,8 @@ const has = (text: string, terms: string[]) => terms.some((term) => text.include
  */
 export function planSoundArchitecture(prompt: string, category: Category, variation = 0): SoundArchitecture {
   const t = prompt.toLowerCase();
-  const piano = has(t, ["piano", "felt", "acoustic", "emotive", "emotional", "fred again", "fred-again"]);
   const rhodes = has(t, ["rhodes", "electric piano", "epiano", " tine", "tines", "soul", "r&b", "rnb"]);
+  const piano = has(t, ["piano", "felt", "acoustic", "emotive", "emotional", "fred again", "fred-again"]) && !rhodes;
   const bell = has(t, ["bell", "chime", "mallet", "glass", "glassy", "celesta", "glock"]);
   const gritty = has(t, ["gritty", "dirty", "aggressive", "distorted", "reese", "growl"]);
   const evolving = has(t, ["evolving", "moving", "breathing", "morph", "shifting", "ambient", "cinematic"]);
