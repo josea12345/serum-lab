@@ -8,7 +8,7 @@ import { buildNativePreset } from "@/lib/serum/native";
 import { loadCurrent, loadLibrary, saveCurrent, saveLibrary, upsert } from "@/lib/serum/storage";
 import { getPath, newId, setPath } from "@/lib/serum/util";
 import {
-  CATEGORIES, DIST_MODES, FILTER_TYPES, LFO_SHAPES, MOD_TARGETS, WAVETABLES, type Category, type Patch,
+  CATEGORIES, DIST_MODES, FILTER_TYPES, LFO_SHAPES, MOD_TARGETS, WAVETABLES, WARP_MODES, type Category, type Patch,
 } from "@/lib/serum/types";
 import { Panel, RangeParam, SelectParam, Toggle, type Field } from "./controls";
 import { AdsrGraph, OscScope, WaveMark } from "./visuals";
@@ -24,6 +24,8 @@ const EXAMPLES = [
 const osc = (k: "oscA" | "oscB" | "oscC"): Field[] => [
   { kind: "select", path: `${k}.wavetable`, label: "Wavetable", options: WAVETABLES },
   { kind: "range", path: `${k}.wtPos`, label: "WT Pos", min: 0, max: 100, unit: "%" },
+  { kind: "select", path: `${k}.warpMode`, label: "Warp", options: WARP_MODES },
+  { kind: "range", path: `${k}.warpAmount`, label: "Warp Amount", min: 0, max: 100, unit: "%" },
   { kind: "range", path: `${k}.octave`, label: "Octave", min: -4, max: 4 },
   { kind: "range", path: `${k}.semi`, label: "Semi", min: -12, max: 12 },
   { kind: "range", path: `${k}.fine`, label: "Fine", min: -100, max: 100, unit: "ct" },
