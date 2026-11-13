@@ -178,7 +178,7 @@ export const Route = createFileRoute("/api/generate")({
           osc.pan = clamp(osc.pan, -50, 50, fallback.pan);
         };
         sanitizeOsc(patch.oscA, base.oscA); sanitizeOsc(patch.oscB, base.oscB); sanitizeOsc(patch.oscC, base.oscC);
-        if (architecture.id.includes("grand-keys")) { patch.oscA.engine = "multisample"; patch.oscA.multisampleInstrument = "piano_grand"; patch.oscB.enabled = false; patch.oscC.enabled = false; patch.sub.enabled = false; }
+        if (["emotive-keys", "felt-grand-keys", "processed-grand-keys"].includes(architecture.id)) { patch.oscA.engine = "multisample"; patch.oscA.multisampleInstrument = "piano_grand"; patch.oscB.enabled = false; patch.oscC.enabled = false; patch.sub.enabled = false; }
         if (architecture.id.includes("rhodes-keys")) { patch.oscA.engine = "multisample"; patch.oscA.multisampleInstrument = "epiano_suitcase"; patch.oscB.enabled = false; patch.oscC.enabled = false; patch.sub.enabled = false; }
         patch.macros = base.macros.map((fallback, index) => {
           const macro = patch.macros[index] || fallback;
