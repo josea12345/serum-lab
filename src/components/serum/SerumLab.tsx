@@ -138,7 +138,7 @@ export function SerumLab() {
       const result = await response.json() as { patch?: Patch; error?: string; model?: string; fallback?: boolean; quality?: { score: number; checks: string[]; warnings: string[] }; architecture?: { name: string } };
       if (!response.ok || !result.patch) throw new Error(result.error || "AI generation failed.");
       setPatch(result.patch); setBaseline(result.patch); setCategory(result.patch.category); setGenerationIndex(iteration);
-      flash((result.fallback ? "Local architecture · " : nextDirection ? "New direction · " : "AI designed · ") + result.patch.name + (result.quality ? " · QA " + result.quality.score + "%" : ""));
+      flash((result.fallback ? "Local architecture · " : nextDirection ? "New direction · " : "AI designed · ") + result.patch.name + (result.quality ? " · checks " + result.quality.checks.length + "/5" : ""));
       document.getElementById("workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
       flash(error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError")
