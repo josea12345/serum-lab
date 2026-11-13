@@ -33,7 +33,7 @@ export const MOD_TARGETS = [
 export const DIST_MODES = ["Tube", "Soft Clip", "Hard Clip", "Diode", "Bit Crush", "Downsample"] as const;
 
 export interface Osc {
-  enabled: boolean; wavetable: string; wtPos: number; warpMode: (typeof WARP_MODES)[number]; warpAmount: number; warpMode2: (typeof WARP_MODES)[number]; warpAmount2: number; octave: number; semi: number; fine: number;
+  enabled: boolean; engine: "wavetable" | "multisample"; multisampleInstrument: "piano_grand" | "epiano_suitcase"; multisampleAttack: number; multisampleDecay: number; multisampleRelease: number; wavetable: string; wtPos: number; warpMode: (typeof WARP_MODES)[number]; warpAmount: number; warpMode2: (typeof WARP_MODES)[number]; warpAmount2: number; octave: number; semi: number; fine: number;
   unison: number; detune: number; blend: number; level: number; pan: number;
 }
 export interface Env { attack: number; hold: number; decay: number; sustain: number; release: number }
