@@ -6,6 +6,7 @@ import { EXPORTERS, buildSpec } from "./export";
 import { upgradePatch } from "./storage";
 import { SERUM_FACTORY_WAVETABLES, WAVETABLES, WARP_MODES } from "./types";
 import { applySoundArchitecture, evaluateAndRepairPatch, planSoundArchitecture } from "./intelligence";
+import { MULTISAMPLE_INSTRUMENTS } from "./multisample";
 
 describe("Serum Lab engine", () => {
   it("starter preset is CELESTIAL KEYS in Keys", () => {
@@ -60,6 +61,17 @@ describe("Serum Lab engine", () => {
     expect(CELESTIAL_KEYS.macros).toHaveLength(4);
     expect(CELESTIAL_KEYS.macros.map((m) => m.name)).toEqual(["TONE", "MOTION", "SPACE", "EDGE"]);
     expect(CELESTIAL_KEYS.macros.every((m) => m.value >= 0 && m.value <= 100)).toBe(true);
+  });
+  it("uses real factory multisample engines for piano and Rhodes briefs", () => {
+    const piano = generatePatch({ prompt: "Fred again inspired emotional piano keys", category: "Keys" });
+    const rhodes = generatePatch({ prompt: "warm Rhodes electric piano", category: "Keys" });
+    expect(piano.oscA.engine).toBe("multisample");
+    expect(piano.oscA.multisampleInstrument).toBe("piano_grand");
+    expect(rhodes.oscA.engine).toBe("multisample");
+    expect(rhodes.oscA.multisampleInstrument).toBe("epiano_suitcase");
+    expect(piano.oscB.enabled).toBe(false);
+    expect(Object.keys(MULTISAMPLE_INSTRUMENTS.piano_grand.files).length).toBeGreaterThan(50);
+    expect(Object.keys(MULTISAMPLE_INSTRUMENTS.epiano_suitcase.files).length).toBeGreaterThan(50);
   });
   it("plans distinct sound architectures for emotional piano and Rhodes briefs", () => {
     expect(planSoundArchitecture("Fred again inspired emotional piano keys", "Keys", 0).id).toBe("emotive-keys");
