@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { categoryBase } from "@/lib/serum/presets";
 import { generatePatch } from "@/lib/serum/generator";
 import { SERUM_2_DESIGN_BIBLE } from "@/lib/serum/knowledge";
-import { CATEGORIES, DIST_MODES, FILTER_TYPES, LFO_SHAPES, MOD_TARGETS, WAVETABLES, type Category, type Patch } from "@/lib/serum/types";
+import { CATEGORIES, DIST_MODES, FILTER_TYPES, LFO_SHAPES, MOD_TARGETS, WAVETABLES, WARP_MODES, type Category, type Patch } from "@/lib/serum/types";
 function merge(base: any, incoming: any): any {
   if (Array.isArray(base)) return Array.isArray(incoming) ? incoming : base;
   if (base && typeof base === "object") {
@@ -113,6 +113,8 @@ export const Route = createFileRoute("/api/generate")({
         const sanitizeOsc = (osc: Patch["oscA"], fallback: Patch["oscA"]) => {
           osc.wavetable = WAVETABLES.includes(osc.wavetable as typeof WAVETABLES[number]) ? osc.wavetable : fallback.wavetable;
           osc.wtPos = clamp(osc.wtPos, 0, 100, fallback.wtPos);
+          osc.warpMode = WARP_MODES.includes(osc.warpMode as typeof WARP_MODES[number]) ? osc.warpMode : "None";
+          osc.warpAmount = clamp(osc.warpAmount, 0, 100, 0);
           osc.octave = Math.round(clamp(osc.octave, -4, 4, fallback.octave));
           osc.semi = Math.round(clamp(osc.semi, -12, 12, fallback.semi));
           osc.fine = clamp(osc.fine, -100, 100, fallback.fine);
