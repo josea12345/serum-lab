@@ -127,6 +127,15 @@ export const Route = createFileRoute("/api/generate")({
           osc.pan = clamp(osc.pan, -50, 50, fallback.pan);
         };
         sanitizeOsc(patch.oscA, base.oscA); sanitizeOsc(patch.oscB, base.oscB); sanitizeOsc(patch.oscC, base.oscC);
+        patch.macros = base.macros.map((fallback, index) => {
+          const macro = patch.macros[index] || fallback;
+          return {
+            name: typeof macro.name === "string" ? macro.name.slice(0, 24) : fallback.name,
+            value: clamp(macro.value, 0, 100, fallback.value),
+            target: MOD_TARGETS.includes(macro.target as typeof MOD_TARGETS[number]) ? macro.target : fallback.target,
+            amount: clamp(macro.amount, -100, 100, fallback.amount),
+          };
+        });
         patch.sub.octave = Math.round(clamp(patch.sub.octave, -4, 4, base.sub.octave));
         patch.sub.level = clamp(patch.sub.level, 0, 100, base.sub.level);
         patch.noise.level = clamp(patch.noise.level, 0, 100, base.noise.level);
