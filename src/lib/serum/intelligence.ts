@@ -19,7 +19,6 @@ export function planSoundArchitecture(prompt: string, category: Category, variat
   const rhodes = has(t, ["rhodes", "electric piano", "epiano", " tine", "tines", "soul", "r&b", "rnb"]);
   const piano = has(t, ["piano", "felt", "acoustic", "emotive", "emotional", "fred again", "fred-again"]) && !rhodes;
   const bell = has(t, ["bell", "chime", "mallet", "glass", "glassy", "celesta", "glock"]);
-  const gritty = has(t, ["gritty", "dirty", "aggressive", "distorted", "reese", "growl"]);
   const evolving = has(t, ["evolving", "moving", "breathing", "morph", "shifting", "ambient", "cinematic"]);
   const pluck = category === "Pluck" || has(t, ["pluck", "plucky", "short", "staccato", "arp", "arpeggio"]);
   const bass = category === "Bass" || has(t, ["bass", "808", "sub", "reese"]);
