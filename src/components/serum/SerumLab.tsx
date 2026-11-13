@@ -22,6 +22,8 @@ const EXAMPLES = [
 ];
 
 const osc = (k: "oscA" | "oscB" | "oscC"): Field[] => [
+  { kind: "select", path: `${k}.engine`, label: "Source Engine", options: ["wavetable", "multisample"] },
+  { kind: "select", path: `${k}.multisampleInstrument`, label: "Factory Multisample", options: ["piano_grand", "epiano_suitcase"] },
   { kind: "select", path: `${k}.wavetable`, label: "Wavetable", options: WAVETABLES },
   { kind: "range", path: `${k}.wtPos`, label: "WT Pos", min: 0, max: 100, unit: "%" },
   { kind: "select", path: `${k}.warpMode`, label: "Warp", options: WARP_MODES },
