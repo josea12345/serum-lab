@@ -81,6 +81,7 @@ export const Route = createFileRoute("/api/generate")({
         patch.createdAt = now; patch.updatedAt = now;
         patch.oscA.level = clamp(patch.oscA.level, 0, 100, base.oscA.level);
         patch.oscB.level = clamp(patch.oscB.level, 0, 100, base.oscB.level);
+        patch.oscC.level = clamp(patch.oscC.level, 0, 100, base.oscC.level);
         patch.oscA.unison = clamp(patch.oscA.unison, 1, 16, 1);
         patch.oscB.unison = clamp(patch.oscB.unison, 1, 16, 1);
         patch.filter.cutoff = clamp(patch.filter.cutoff, 20, 20000, base.filter.cutoff);
@@ -101,7 +102,7 @@ export const Route = createFileRoute("/api/generate")({
           osc.level = clamp(osc.level, 0, 100, fallback.level);
           osc.pan = clamp(osc.pan, -50, 50, fallback.pan);
         };
-        sanitizeOsc(patch.oscA, base.oscA); sanitizeOsc(patch.oscB, base.oscB);
+        sanitizeOsc(patch.oscA, base.oscA); sanitizeOsc(patch.oscB, base.oscB); sanitizeOsc(patch.oscC, base.oscC);
         patch.sub.octave = Math.round(clamp(patch.sub.octave, -4, 4, base.sub.octave));
         patch.sub.level = clamp(patch.sub.level, 0, 100, base.sub.level);
         patch.noise.level = clamp(patch.noise.level, 0, 100, base.noise.level);
