@@ -21,7 +21,7 @@ const EXAMPLES = [
   "evolving cinematic pad, wide and spacious",
 ];
 
-const osc = (k: "oscA" | "oscB"): Field[] => [
+const osc = (k: "oscA" | "oscB" | "oscC"): Field[] => [
   { kind: "select", path: `${k}.wavetable`, label: "Wavetable", options: WAVETABLES },
   { kind: "range", path: `${k}.wtPos`, label: "WT Pos", min: 0, max: 100, unit: "%" },
   { kind: "range", path: `${k}.octave`, label: "Octave", min: -4, max: 4 },
@@ -224,7 +224,7 @@ export function SerumLab() {
             ))}
           </div>
           <p className="mt-4 font-mono text-[11px] text-muted-foreground">
-            Engine: Serum Lab AI · Gemini 3.8 Flash · Serum 2 sound-design reasoning
+            Engine: Serum Lab AI · Gemini · 3-source Serum 2 sound-design engine
           </p>
         </section>
 
@@ -263,9 +263,9 @@ export function SerumLab() {
             </section>
 
             <div className="grid gap-5 md:grid-cols-2">
-              {(["oscA", "oscB"] as const).map((k) => (
-                <Panel key={k} title={k === "oscA" ? "OSC A" : "OSC B"} accent="accent"
-                  right={<Toggle label={`${k === "oscA" ? "Osc A" : "Osc B"} enabled`} checked={patch[k].enabled} onChange={(v) => set(`${k}.enabled`, v)} />}>
+              {(["oscA", "oscB", "oscC"] as const).map((k) => (
+                <Panel key={k} title={k === "oscA" ? "OSC A" : k === "oscB" ? "OSC B" : "OSC C"} accent="accent"
+                  right={<Toggle label={`${k === "oscA" ? "Osc A" : k === "oscB" ? "Osc B" : "Osc C"} enabled`} checked={patch[k].enabled} onChange={(v) => set(`${k}.enabled`, v)} />}>
                   <OscScope osc={patch[k]} />
                   <div className="mt-3"><Fields fields={osc(k)} patch={patch} set={set} disabled={!patch[k].enabled} /></div>
                 </Panel>
