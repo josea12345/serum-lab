@@ -9,9 +9,9 @@ export const CELESTIAL_KEYS: Patch = {
   category: "Keys",
   tags: ["Keys", "Dreamy", "Dark", "Bell", "Wide", "Spacious"],
   prompt: "dreamy futuristic dark melodic keys with a soft bell transient",
-  oscA: { enabled: true, wavetable: "Warm FM", wtPos: 32, octave: 0, semi: 0, fine: 0, unison: 3, detune: 12, blend: 40, level: 78, pan: 0 },
-  oscB: { enabled: true, wavetable: "Digital Bell", wtPos: 58, octave: 1, semi: 0, fine: 6, unison: 2, detune: 8, blend: 30, level: 42, pan: 0 },
-  oscC: { enabled: false, wavetable: "Spectral Pad", wtPos: 40, octave: 0, semi: 0, fine: 0, unison: 1, detune: 0, blend: 50, level: 25, pan: 0 },
+  oscA: { enabled: true, wavetable: "Warm Analog / DM-OSCAR", wtPos: 32, octave: 0, semi: 0, fine: 0, unison: 3, detune: 12, blend: 40, level: 78, pan: 0 },
+  oscB: { enabled: true, wavetable: "FM Piano", wtPos: 58, octave: 1, semi: 0, fine: 6, unison: 2, detune: 8, blend: 30, level: 42, pan: 0 },
+  oscC: { enabled: false, wavetable: "Harmonic Series Smooth", wtPos: 40, octave: 0, semi: 0, fine: 0, unison: 1, detune: 0, blend: 50, level: 25, pan: 0 },
   sub: { enabled: true, octave: -1, level: 22 },
   noise: { enabled: false, level: 6 },
   filter: { enabled: true, type: "MG Low 24", cutoff: 2400, resonance: 18, drive: 12, mix: 100 },
@@ -44,8 +44,8 @@ export function categoryBase(cat: Category): Patch {
     case "Keys":
       break;
     case "Bass":
-      Object.assign(p.oscA, { wavetable: "Saw Stack", wtPos: 20, octave: -1, unison: 1, detune: 0, level: 80 });
-      Object.assign(p.oscB, { wavetable: "Soft Square", octave: -1, unison: 1, fine: 0, level: 35 });
+      Object.assign(p.oscA, { wavetable: "Analog / Basic Shapes", wtPos: 20, octave: -1, unison: 1, detune: 0, level: 80 });
+      Object.assign(p.oscB, { wavetable: "Warm Sub", octave: -1, unison: 1, fine: 0, level: 35 });
       p.sub = { enabled: true, octave: -1, level: 60 };
       Object.assign(p.filter, { type: "MG Low 24", cutoff: 900, resonance: 22, drive: 30 });
       p.ampEnv = { attack: 1, hold: 0, decay: 500, sustain: 80, release: 120 };
@@ -59,8 +59,8 @@ export function categoryBase(cat: Category): Patch {
       p.global = { voices: 1, portamento: 40, master: 78 };
       break;
     case "Lead":
-      Object.assign(p.oscA, { wavetable: "Saw Stack", wtPos: 45, unison: 5, detune: 18, level: 80 });
-      Object.assign(p.oscB, { wavetable: "Pulse Width", octave: 0, fine: 7, unison: 3, level: 50 });
+      Object.assign(p.oscA, { wavetable: "Analog / Basic Shapes", wtPos: 45, unison: 5, detune: 18, level: 80 });
+      Object.assign(p.oscB, { wavetable: "PWM / Juno", octave: 0, fine: 7, unison: 3, level: 50 });
       p.sub.enabled = false;
       Object.assign(p.filter, { type: "Low 12", cutoff: 5200, resonance: 20, drive: 20 });
       p.ampEnv = { attack: 4, hold: 0, decay: 600, sustain: 85, release: 350 };
@@ -69,23 +69,23 @@ export function categoryBase(cat: Category): Patch {
       p.global = { voices: 1, portamento: 60, master: 74 };
       break;
     case "Pluck":
-      Object.assign(p.oscA, { wavetable: "Glass Partials", wtPos: 50, unison: 2, detune: 10 });
+      Object.assign(p.oscA, { wavetable: "Harmonic Series Smooth", wtPos: 50, unison: 2, detune: 10 });
       Object.assign(p.filter, { type: "Low 24", cutoff: 1400, resonance: 20 });
       p.ampEnv = { attack: 1, hold: 0, decay: 380, sustain: 0, release: 420 };
       Object.assign(p.env2, { decay: 260, sustain: 0, amount: 55 });
       Object.assign(p.fx.delay, { time: 250, feedback: 38, mix: 24 });
       break;
     case "Pad":
-      Object.assign(p.oscA, { wavetable: "Spectral Pad", wtPos: 40, unison: 7, detune: 22, blend: 60 });
-      Object.assign(p.oscB, { wavetable: "Saw Stack", octave: 0, unison: 5, detune: 18, level: 40 });
+      Object.assign(p.oscA, { wavetable: "Harmonic Series Smooth", wtPos: 40, unison: 7, detune: 22, blend: 60 });
+      Object.assign(p.oscB, { wavetable: "Analog / Basic Shapes", octave: 0, unison: 5, detune: 18, level: 40 });
       Object.assign(p.filter, { cutoff: 1800, resonance: 12 });
       p.ampEnv = { attack: 1200, hold: 0, decay: 2000, sustain: 85, release: 4200 };
       Object.assign(p.lfo1, { rate: 0.12, amount: 28 });
       Object.assign(p.fx.reverb, { size: 92, decay: 9, mix: 45 });
       break;
     case "Texture":
-      Object.assign(p.oscA, { wavetable: "Granular Air", wtPos: 60, unison: 4, detune: 25 });
-      Object.assign(p.oscB, { wavetable: "Noise Shimmer", octave: 1, level: 30 });
+      Object.assign(p.oscA, { wavetable: "Dying Sine", wtPos: 60, unison: 4, detune: 25 });
+      Object.assign(p.oscB, { wavetable: "Digital / Basic OPL", octave: 1, level: 30 });
       p.noise = { enabled: true, level: 24 };
       Object.assign(p.filter, { type: "Band 12", cutoff: 2600, resonance: 30 });
       p.ampEnv = { attack: 2000, hold: 0, decay: 3000, sustain: 70, release: 5000 };
