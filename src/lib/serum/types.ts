@@ -39,6 +39,7 @@ export interface Osc {
 export interface Env { attack: number; hold: number; decay: number; sustain: number; release: number }
 export interface ModEnv extends Env { target: string; amount: number }
 export interface Lfo { shape: string; rate: number; target: string; amount: number }
+export interface MacroControl { name: string; value: number; target: string; amount: number }
 
 export interface Patch {
   schema: "serumlab.patch/1";
@@ -57,6 +58,7 @@ export interface Patch {
     compressor: { enabled: boolean; threshold: number; ratio: number; mix: number };
     dimension: { enabled: boolean; size: number; mix: number };
   };
+  macros: MacroControl[];
   global: { voices: number; portamento: number; master: number };
   createdAt: string; updatedAt: string;
 }
