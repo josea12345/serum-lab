@@ -26,7 +26,7 @@ export interface Lfo { shape: string; rate: number; target: string; amount: numb
 export interface Patch {
   schema: "serumlab.patch/1";
   id: string; name: string; description: string; category: Category; tags: string[]; prompt: string;
-  oscA: Osc; oscB: Osc;
+  oscA: Osc; oscB: Osc; oscC: Osc;
   sub: { enabled: boolean; octave: number; level: number };
   noise: { enabled: boolean; level: number };
   filter: { enabled: boolean; type: string; cutoff: number; resonance: number; drive: number; mix: number };
