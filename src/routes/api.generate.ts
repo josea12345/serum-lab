@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { categoryBase } from "@/lib/serum/presets";
 import { generatePatch } from "@/lib/serum/generator";
+import { evaluateAndRepairPatch, planSoundArchitecture } from "@/lib/serum/intelligence";
 import { SERUM_2_DESIGN_BIBLE } from "@/lib/serum/knowledge";
 import { CATEGORIES, DIST_MODES, FILTER_TYPES, LFO_SHAPES, MOD_TARGETS, WAVETABLES, WARP_MODES, type Category, type Patch } from "@/lib/serum/types";
 function merge(base: any, incoming: any): any {
@@ -26,8 +27,10 @@ function localFallback(prompt: string, category: Category, variation: number) {
   const direction = variation > 0 ? OFFLINE_DIRECTIONS[(variation - 1) % OFFLINE_DIRECTIONS.length] : "";
   const patch = generatePatch({ prompt: [prompt, direction].filter(Boolean).join(". "), category, variation });
   patch.prompt = prompt;
-  patch.description = (patch.description + " Local sound-intent fallback: generated without Gemini; advanced AI interpretation is temporarily unavailable.").slice(0, 1000);
-  return Response.json({ patch, model: "local sound-intent engine (offline fallback)", fallback: true });
+  const architecture = planSoundArchitecture(prompt, patch.category, variation);
+  const quality = evaluateAndRepairPatch(patch, prompt);
+  patch.description = (patch.description + " Architecture: " + architecture.name + ". " + quality.checks.length + " structural checks passed. Local sound-intent fallback: generated without Gemini.").slice(0, 1000);
+  return Response.json({ patch, model: "local sound-intent engine (offline fallback)", fallback: true, quality, architecture });
 }
 
 async function geminiRequest(url: string, init: RequestInit, timeoutMs: number): Promise<{ status: number; ok: boolean; text: string }> {
@@ -67,9 +70,10 @@ export const Route = createFileRoute("/api/generate")({
         const base = categoryBase(category);
         if (!key) return localFallback(prompt, category, variation);
         const previous = body.previous ? JSON.stringify(body.previous).slice(0, 5000) : "None";
+        const architecture = planSoundArchitecture(prompt, category, variation);
         const system = "You are a world-class electronic music sound designer and senior Serum 2 programmer. Your output must sound like a finished, intentional instrument from a professional record, not a generic preset demo. Design the patch in this order: source architecture and spectral identity; transient/body balance; note articulation; harmonic movement; stereo placement; then effects. Every oscillator must have a distinct audible role. Avoid defaulting to saw stacks, excessive unison, excessive reverb, chorus-plus-dimension stacking, or turning on every effect. Keep low frequencies mono and stable, preserve transient definition, leave headroom, and use the minimum processing needed. Choose envelope and modulation values that fit the musical role and note range. Be specific, tasteful, and decisive. Variation requests must change the underlying sound concept and layer roles, not merely tweak parameter values. Use only schema fields and enum values; do not invent factory wavetable names or unsupported engines. Return ONLY one complete JSON patch object matching the supplied schema. Envelope times are milliseconds; filter cutoff Hz; LFO rate Hz.\\n\\n" + SERUM_2_DESIGN_BIBLE;
         const direction = variation === 0 ? "Create the strongest, most musically useful interpretation. Do not over-layer or over-process." : "Creative iteration " + (variation + 1) + ": create a clearly different professional instrument concept. Choose a new source-role arrangement and a different transient/body relationship. Preserve the brief but do not reuse the previous architecture. Previous patch to avoid repeating: " + previous;
-        const user = "Brief: " + prompt + "\nCategory: " + category + "\nDirection: " + direction + "\n\nComplete output structure and valid enum examples: " + JSON.stringify(base) + "\n\nAllowed actual Serum 2 factory wavetables: " + WAVETABLES.join(", ") + ". Allowed self-contained warp modes: " + WARP_MODES.join(", ") + ". Select source tables intentionally and use warp only when it contributes audible harmonic motion. Cross-oscillator FM/AM modes are intentionally excluded until operator routing is modeled. The second warp lane is independent and can be used to tame or further shape the primary warp.\n\nReturn a complete patch object. Give it a distinctive uppercase preset name, meaningful description and tags. Keep prompt equal to the brief.";
+        const user = "Brief: " + prompt + "\nCategory: " + category + "\nDirection: " + direction + "\n\nREQUIRED SOUND ARCHITECTURE PLAN: " + JSON.stringify(architecture) + "\nUse this as the starting concept, but adapt individual settings to the brief. Give each source a distinct audible job. Do not merely describe the plan: encode it in the patch fields.\n\nComplete output structure and valid enum examples: " + JSON.stringify(base) + "\n\nAllowed actual Serum 2 factory wavetables: " + WAVETABLES.join(", ") + ". Allowed self-contained warp modes: " + WARP_MODES.join(", ") + ". Select source tables intentionally and use warp only when it contributes audible harmonic motion. Cross-oscillator FM/AM modes are intentionally excluded until operator routing is modeled. The second warp lane is independent and can be used to tame or further shape the primary warp.\n\nReturn a complete patch object. Give it a distinctive uppercase preset name, meaningful description and tags. Keep prompt equal to the brief.";
         let response: { status: number; ok: boolean; text: string } | undefined;
         let modelUsed = "";
         const models = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
@@ -222,7 +226,9 @@ export const Route = createFileRoute("/api/generate")({
         patch.global.voices = Math.round(clamp(patch.global.voices, 1, 32, 8));
         patch.global.portamento = clamp(patch.global.portamento, 0, 2000, 0);
         patch.global.master = clamp(patch.global.master, 0, 100, 75);
-        return Response.json({ patch, model: modelUsed + " (free tier)" });
+        const quality = evaluateAndRepairPatch(patch, prompt);
+        patch.description = (patch.description + " Design QA: " + quality.checks.length + " structural checks passed" + (quality.warnings.length ? ". " + quality.warnings.join(" ") : "")).slice(0, 1000);
+        return Response.json({ patch, model: modelUsed + " (free tier)", quality, architecture });
       } catch (error) {
         return Response.json({ error: error instanceof Error ? error.message : "Patch generation failed." }, { status: 500 });
       }
