@@ -109,6 +109,8 @@ export function SerumLab() {
   const [category, setCategory] = useState<Category>("Keys");
   const [status, setStatus] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [generationIndex, setGenerationIndex] = useState(0);
 
   useEffect(() => {
     setLibrary(loadLibrary());
@@ -122,13 +124,21 @@ export function SerumLab() {
   const set = (path: string, v: unknown) => setPatch((p) => ({ ...setPath(p, path, v), updatedAt: new Date().toISOString() }));
   const commitLib = (next: Patch[]) => { setLibrary(next); saveLibrary(next); };
 
-  async function generate() {
+  async function generate(nextDirection = false) {
     const text = prompt.trim();
     if (!text) { flash("Describe a sound first."); return; }
-    const p = await activeGenerator.generate({ prompt: text, category });
-    setPatch(p); setBaseline(p); setCategory(p.category);
-    flash(`Generated ${p.name}`);
-    document.getElementById("workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (generating) return;
+    const iteration = nextDirection ? generationIndex + 1 : 0;
+    setGenerating(true); flash(nextDirection ? "Designing a new sound direction…" : "AI is designing your patch…");
+    try {
+      const response = await fetch("/api/generate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt: text, category, variation: iteration, previous: nextDirection ? patch : undefined }) });
+      const result = await response.json() as { patch?: Patch; error?: string };
+      if (!response.ok || !result.patch) throw new Error(result.error || "AI generation failed.");
+      setPatch(result.patch); setBaseline(result.patch); setCategory(result.patch.category); setGenerationIndex(iteration);
+      flash(nextDirection ? "New direction: " + result.patch.name : "AI designed " + result.patch.name);
+      document.getElementById("workspace")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (error) { flash(error instanceof Error ? error.message : "AI generation failed."); }
+    finally { setGenerating(false); }
   }
   const vary = (k: MutatorKey, label: string) => { setPatch((p) => applyVariation(p, k)); flash(`Applied: ${label}`); };
   const save = () => { commitLib(upsert(library, patch)); setBaseline(patch); flash(`Saved ${patch.name}`); };
@@ -197,8 +207,8 @@ export function SerumLab() {
                   </button>
                 ))}
               </div>
-              <button type="submit" className="inline-flex items-center gap-2 rounded-xl bg-signal px-6 py-2.5 font-display text-sm font-bold tracking-wide text-primary-foreground shadow-glow transition-transform hover:scale-[1.02]">
-                <WaveMark className="h-4 w-4" /> GENERATE
+              <button type="submit" disabled={generating} className="inline-flex items-center gap-2 rounded-xl bg-signal px-6 py-2.5 font-display text-sm font-bold tracking-wide text-primary-foreground shadow-glow transition-transform hover:scale-[1.02] disabled:opacity-50">
+                <WaveMark className="h-4 w-4" /> {generating ? "THINKING…" : "GENERATE"}
               </button>
             </div>
           </form>
@@ -211,7 +221,7 @@ export function SerumLab() {
             ))}
           </div>
           <p className="mt-4 font-mono text-[11px] text-muted-foreground">
-            Engine: {activeGenerator.label} — deterministic keyword interpretation, no AI model connected.
+            Engine: Serum Lab AI · Claude Sonnet 4.6 · structured Serum 2 patch design
           </p>
         </section>
 
@@ -229,6 +239,7 @@ export function SerumLab() {
                     className="mt-1 block w-full bg-transparent font-display text-2xl font-bold tracking-wide focus:outline-none sm:text-3xl" />
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  <button className={btn} onClick={() => void generate(true)} disabled={generating || !prompt.trim()}>Generate another direction</button>
                   <button className={btn} onClick={save}>Save</button>
                   <button className={btn} onClick={duplicate}>Duplicate</button>
                   <button className={btn} onClick={reset} disabled={!dirty}>Reset</button>
