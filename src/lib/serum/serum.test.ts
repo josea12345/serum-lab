@@ -51,7 +51,7 @@ describe("Serum Lab engine", () => {
     }
   });
   it("warp options are restricted to the empirically supported Serum 2 subset", () => {
-    expect(WARP_MODES).toEqual(["None", "Sync", "PWM", "Bend +", "Wavefold", "Soft Clip", "Hard Clip", "Quantize", "Filter LPF", "Filter HPF", "FM (Osc)", "AM (Osc)"]);
+    expect(WARP_MODES).toEqual(["None", "Sync", "PWM", "Bend +", "Wavefold", "Soft Clip", "Hard Clip", "Quantize", "Filter LPF", "Filter HPF"]);
   });
   it("native export is available as beta and JSON is labeled non-native", () => {
     expect(EXPORTERS.find((e) => e.id === "serum2-native")?.available).toBe(true);
