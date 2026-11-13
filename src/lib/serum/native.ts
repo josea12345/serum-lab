@@ -14,7 +14,35 @@ function head(m:number,n:number):number[]{if(n<24)return[(m<<5)|n];if(n<256)retu
 function encode(value:Value):Uint8Array{const out:number[]=[];const put=(v:Value,float=false):void=>{if(v===null){out.push(246);return;}if(v===false){out.push(244);return;}if(v===true){out.push(245);return;}if(typeof v==="number"){if(!float&&Number.isSafeInteger(v))out.push(...(v>=0?head(0,v):head(1,-1-v)));else{out.push(251);const b=new Uint8Array(8);new DataView(b.buffer).setFloat64(0,v,false);out.push(...b);}return;}if(typeof v==="string"){const b=te.encode(v);out.push(...head(3,b.length),...b);return;}if(v instanceof Uint8Array){out.push(...head(2,v.length),...v);return;}if(Array.isArray(v)){out.push(...head(4,v.length));v.forEach(x=>put(x,float));return;}const entries=Object.entries(v).sort(([a],[b])=>a<b?-1:a>b?1:0);out.push(...head(5,entries.length));entries.forEach(([k,x])=>{put(k);put(x,float||k==="plainParams"||k==="xVals"||k==="yVals"||k==="curveVals"||k==="kUIParamMixOrGain");});};put(value);return new Uint8Array(out);}
 function params(tree:Record<string,Value>,name:string):Record<string,Value>{const mod=tree[name] as Record<string,Value>|undefined;if(!mod||typeof mod!=="object"||Array.isArray(mod))throw Error("Template is missing "+name);const p=mod.plainParams;if(p==="default"||p==null)return{};if(typeof p!=="object"||Array.isArray(p)||p instanceof Uint8Array)throw Error("Invalid "+name+" params");return p as Record<string,Value>;}
 function set(tree:Record<string,Value>,name:string,values:Record<string,Value>){const mod=tree[name] as Record<string,Value>,p=params(tree,name);Object.entries(values).forEach(([k,v])=>p[k]=v);mod.plainParams=p;}
-function osc(tree:Record<string,Value>,slot:number,o:Patch["oscA"]){const name="Oscillator"+slot;set(tree,name,{kParamEnable:o.enabled?1:0,kParamVolume:o.level/100,kParamPan:o.pan/50,kParamOctave:o.octave,kParamPitch:o.semi,kParamFine:o.fine,kParamUnison:o.unison,kParamDetune:(o.detune/100)**2});if(slot<3){const mod=tree[name] as Record<string,Value>,wt=mod["WTOsc"+slot] as Record<string,Value>,p=wt.plainParams==="default"?{}:wt.plainParams as Record<string,Value>;p.kParamTablePos=1+255*o.wtPos/100;wt.plainParams=p;}}
+const FACTORY_WAVETABLES: Record<string,{path:string;frames:number}> = {
+ "Default Shapes":{path:"S2 Tables/Default Shapes.wav",frames:18432},
+ "Analog / Basic Shapes":{path:"Analog/Basic Shapes.wav",frames:14336},
+ "Warm Analog / DM-OSCAR":{path:"S2 Tables/Analog/DM - OSCAR.wav",frames:8192},
+ "PWM / Juno":{path:"Analog/PWM Juno.wav",frames:229376},
+ "Analog / Basic Mini":{path:"Analog/Basic Mini.wav",frames:8192},
+ "Warm Sub":{path:"S2 Tables/Analog/Warm Sub.wav",frames:4096},
+ "Digital / Basic OPL":{path:"S2 Tables/Digital/Basic OPL.wav",frames:16384},
+ "Harmonic Series Smooth":{path:"S2 Tables/Digital/Harmonic Series Smooth.wav",frames:49152},
+ "Dying Sine":{path:"S2 Tables/Digital/Dying Sine.wav",frames:524288},
+ "Acid":{path:"Analog/Acid.wav",frames:81920},
+ "FM Piano":{path:"S2 Tables/Digital/FM Piano.wav",frames:4096},
+ "JF Flute":{path:"S2 Tables/Digital/JF Flute.wav",frames:524288},
+};
+function osc(tree:Record<string,Value>,slot:number,o:Patch["oscA"]){
+ const name="Oscillator"+slot;
+ set(tree,name,{kParamEnable:o.enabled?1:0,kParamType:"kOsc_WT",kParamVolume:o.level/100,kParamPan:o.pan/50,kParamOctave:o.octave,kParamPitch:o.semi,kParamFine:o.fine,kParamUnison:o.unison,kParamDetune:(o.detune/100)**2});
+ if(slot<3){
+  const mod=tree[name] as Record<string,Value>,wt=mod["WTOsc"+slot] as Record<string,Value>;
+  const p=wt.plainParams==="default"?{}:wt.plainParams as Record<string,Value>;
+  const table=FACTORY_WAVETABLES[o.wavetable]||FACTORY_WAVETABLES["Default Shapes"];
+  p.kParamTablePos=1+255*o.wtPos/100;
+  wt.plainParams=p;
+  wt.relativePathToWT=table.path;
+  wt.numFrames=table.frames;
+  wt.sampleRate=44100;
+  wt.numChannels=1;
+ }
+}
 function env(tree:Record<string,Value>,slot:number,e:Patch["ampEnv"]){set(tree,"Env"+slot,{kParamAttack:Math.max(0,e.attack)/1000,kParamHold:Math.max(0,e.hold)/1000,kParamDecay:Math.max(0,e.decay)/1000,kParamSustain:e.sustain/100,kParamRelease:Math.max(0,e.release)/1000,kParamCurve1:50,kParamCurve2:66.6,kParamCurve3:66.6});}
 function lfoCurve(shape:string){
  const count=64, xVals:number[]=[],yVals:number[]=[],curveVals:number[]=[];
