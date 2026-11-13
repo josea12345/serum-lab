@@ -29,7 +29,9 @@ describe("Serum Lab engine", () => {
   it("legacy saved patches gain oscillator C without losing their settings", () => {
     const legacy = { ...CELESTIAL_KEYS } as Partial<typeof CELESTIAL_KEYS>;
     delete legacy.oscC;
+    delete legacy.macros;
     const upgraded = upgradePatch(legacy as typeof CELESTIAL_KEYS);
+    expect(upgraded.macros).toHaveLength(4);
     expect(upgraded.oscC.enabled).toBe(false);
     expect(upgraded.oscA.wavetable).toBe(CELESTIAL_KEYS.oscA.wavetable);
   });
