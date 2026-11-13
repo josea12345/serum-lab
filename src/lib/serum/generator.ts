@@ -2,6 +2,7 @@ import { categoryBase } from "./presets";
 import { CATEGORIES, type Category, type Patch } from "./types";
 import { MUTATORS, type MutatorKey } from "./variations";
 import { clamp, hash, newId, round } from "./util";
+import { applySoundArchitecture, evaluateAndRepairPatch } from "./intelligence";
 
 export interface GenerateRequest { prompt: string; category: Category; variation?: number }
 /** Any generator (keyword engine today, an AI model later) implements this. */
@@ -304,6 +305,8 @@ export function generatePatch(req: GenerateRequest, now = new Date().toISOString
   const intent = interpretPrompt(req.prompt, category);
   shapePatch(p, intent, text);
   applyProductionVoicing(p, category, text, req.variation ?? 0);
+  const architecture = applySoundArchitecture(p, req.prompt, category, req.variation ?? 0);
+  const quality = evaluateAndRepairPatch(p, req.prompt);
 
   // Make the bass path mono and focused unless the user explicitly asks for width.
   if (category === "Bass" && intent.width !== "Wide stereo") {
@@ -318,7 +321,7 @@ export function generatePatch(req: GenerateRequest, now = new Date().toISOString
   p.name = `${ADJ[h % ADJ.length]} ${NOUN[category][(h >> 4) % NOUN[category].length]}`;
   p.prompt = req.prompt.trim();
   p.tags = [...new Set([category, ...matched.map((r) => r.tag), intent.role.split(" ")[0], intent.envelope.split(" ")[0]])];
-  p.description = `${intent.role}. ${intent.envelope} envelope; ${intent.tone.toLowerCase()} tone; ${intent.motion.toLowerCase()}; ${intent.width.toLowerCase()} image; ${intent.density.toLowerCase()} structure; ${intent.space.toLowerCase()} ambience. Layer roles: A carries the core tone, ${p.oscB.enabled ? "B adds upper articulation" : "single-source focused voice"}${p.oscC.enabled ? ", C adds a restrained air layer" : ""}. FX are restrained to preserve transient clarity and mix headroom. ${p.filter.type} filter at ${p.filter.cutoff} Hz.`;
+  p.description = `${architecture.name}. ${architecture.reason} ${intent.envelope} envelope; ${intent.tone.toLowerCase()} tone; ${intent.motion.toLowerCase()}; ${intent.width.toLowerCase()} image. QA: ${quality.checks.length} structural checks passed${quality.warnings.length ? "; " + quality.warnings.join(" ") : ""}. ${p.filter.type} filter at ${p.filter.cutoff} Hz.`;
   p.createdAt = now;
   p.updatedAt = now;
   return p;
