@@ -305,6 +305,21 @@ export function SerumLab() {
               <Panel title="LFO 2" accent="accent"><Fields cols="grid-cols-2" patch={patch} set={set} fields={lfo("lfo2")} /></Panel>
             </div>
 
+            <Panel title="PERFORMANCE MACROS">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {patch.macros.map((macro, i) => (
+                  <div key={i} className="rounded-lg border border-border bg-card p-3">
+                    <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground">{macro.name}</p>
+                    <Fields cols="grid-cols-2" patch={patch} set={set} fields={[
+                      { kind: "range", path: `macros.${i}.value`, label: "Position", min: 0, max: 100, unit: "%" },
+                      { kind: "select", path: `macros.${i}.target`, label: "Destination", options: MOD_TARGETS },
+                      { kind: "range", path: `macros.${i}.amount`, label: "Depth", min: -100, max: 100, unit: "%" },
+                    ]} />
+                  </div>
+                ))}
+              </div>
+            </Panel>
+
             <Panel title="FX CHAIN">
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {FX.map((fx, i) => {
